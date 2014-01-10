@@ -22,6 +22,11 @@ int tty_open(struct tty_t *tty_dev) {
 	else 
 		tty_dev->fd = fd;
 
+	/* store default termios setitngs */
+	if (tcgetattr(tty_dev->fd, &(tty_dev->ttysetdef)))
+		fprintf(stderr, "[%s] error reading device default config\n"
+				"\t\t-> default config will not be restored upon exit", __func__);
+
 	tty_dev->ttyset.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR |
 							 	 PARMRK | INPCK | ISTRIP | IXON);
 	tty_dev->ttyset.c_oflag &= ~(OCRNL | ONLCR | ONLRET |
@@ -35,17 +40,17 @@ int tty_open(struct tty_t *tty_dev) {
 	/* if speed is set to B0 (e.g. cfg file is not provided), default values are used */
 	if (cfgetispeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
 		cfsetispeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0) {
-		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
 		return -errno;
 	}
 	if (cfgetospeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
 		cfsetospeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0) {
-		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
 		return -errno;
    	}
 
-   	if(tcsetattr(tty_dev->fd, TCSAFLUSH, &(tty_dev->ttyset)) < 0) {
-		fprintf(stderr, "[%s] error configuring tty device\n", NAME);
+   	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttyset)) < 0) {
+		fprintf(stderr, "[%s] error configuring tty device\n", __func__);
 		return -errno;
    	}
 
@@ -55,7 +60,20 @@ int tty_open(struct tty_t *tty_dev) {
 
 /* Closes the tty device. */
 int tty_close(struct tty_t *tty_dev) {
-	// close and set "tty_dev.fd = -1"
+	
+	int fd = tty_dev->fd;
+	tty_dev->fd = -1;
+
+	fprintf(stderr, "[%s] closing tty device \n", __func__);
+	
+	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttysetdef)) < 0) {
+		fprintf(stderr, "[%s] error restorting tty device default config\n", __func__);
+		return -errno;
+   	}
+
+	if (close(fd) < 0)
+		return -errno;
+
 	return 0;
 }
 

@@ -35,6 +35,7 @@ struct client_t {
 
 struct tty_t {
 	int fd; 					/* tty file descriptor */
+	struct termios ttysetdef;	/* default tty termios settings */
 	struct termios ttyset;		/* tty termios settings */
 	char path[DEV_PATH]; 		/* tty device path */
 	char data[DATABUF_LEN]; 	/* buffer for data received from tty */

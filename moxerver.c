@@ -53,10 +53,10 @@ int time2string(time_t time, char* timestamp) {
 /* Parse handler function, used to configure serial port */
 int parse_handler(void *user, const char *section, const char *name, const char *value) {
 	
-	printf("[%s] section = %s, name = %s, value = %s\n", __func__, section, name, value);
+	//printf("[%s] section = %s, name = %s, value = %s\n", __func__, section, name, value);
 	
 	if (!strcmp(name, "speed") && (unsigned int)atoi(section) == server.port) {
-		printf("[%s] setting %s speed for port %s\n", __func__, value, section);
+		fprintf(stderr, "[%s] setting %s speed for port %s\n", __func__, value, section);
 		
 		if (cfsetispeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0 || 
 			cfsetospeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0) {
@@ -170,7 +170,12 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path);
 	
 	/* start thread that handles tty device */
-	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev); //TODO check return value?
+	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev);
+	if (ret) {
+		fprintf(stderr, "[%s] error starting serial monitor thread"
+				", pthread_create returned %d\n", NAME, ret);
+		return -1;
+	}
 	
 	/* loop with timeouts waiting for client connection and data */
 	while (1) {
