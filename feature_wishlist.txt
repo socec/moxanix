@@ -1,6 +1,3 @@
-- remove Nagle algorithm
-	- use TCP_NODELAY
-
 - support multiple client connections at the same time
 	- first client has control
 	- additional clients can see the traffic

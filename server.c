@@ -25,6 +25,12 @@ int server_setup(struct server_t *server, unsigned int port) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
+	/* turn off Nagle algorithm */
+	opt = 1; /* true value for setsockopt option */
+	if (setsockopt(server->socket, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(int)) == -1) {
+		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
+		return -errno;
+	}
 	
 	/* bind server address to a socket */
 	if (bind(server->socket, (struct sockaddr *) &server->address, sizeof(server->address)) == -1) {
