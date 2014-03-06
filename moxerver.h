@@ -9,7 +9,7 @@
 #include <termios.h>
 
 #define DATA_BUFLEN 128
-
+#define DEV_PATH 32
 
 struct server_t {
 	int socket; 					/* server socket */
@@ -27,6 +27,7 @@ struct client_t {
 struct tty_t {
 	int fd; 					/* tty file descriptor */
 	struct termios ttyset;		/* tty termios settings */
+	char path[DEV_PATH]; 		/* tty device path */
 	char data[DATA_BUFLEN]; 	/* buffer for data received from tty */
 };
 
@@ -50,7 +51,7 @@ int client_write(struct client_t *client, char *databuf, int datalen);
 
 
 /* Opens the tty device and configures it. */
-int tty_open(struct tty_t *tty_dev);
+int tty_open(struct tty_t *tty_dev, char* path);
 /* Closes the tty device. */
 int tty_close(struct tty_t *tty_dev);
 /* Reconfigures the tty device. */

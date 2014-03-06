@@ -7,7 +7,8 @@
 /* Prints help message. */
 void usage() {
 	//TODO maybe some styling should be done
-	fprintf(stderr, "Usage: moxerver -p port [-h]\n\n");
+	fprintf(stderr, "Usage: moxerver -p tcp_port -t tty_path [-h]\n");
+	fprintf(stderr, "- tcp_port must be in range 4001 to 4008\n\n");
 }
 
 /* MoxaNix main program loop. */
@@ -17,7 +18,10 @@ int main(int argc, char *argv[]) {
 	
 	struct server_t server;
 	struct client_t client; //TODO working with only 1 client, this can be expanded into a list
-	unsigned int port;
+	struct tty_t tty_dev;
+	
+	unsigned int tcp_port = -1;
+	char tty_path[DEV_PATH] = {'\0'};
 	
 	fd_set read_fds;
 	int fdmax;
@@ -25,21 +29,25 @@ int main(int argc, char *argv[]) {
 	
 	
 	/* grab arguments */
-	if (argc == 1) {
+	if (argc <= 1) {
 		fprintf(stderr, "error parsing arguments\n");
 		usage();
 		return 0;
 	}
-	while ((ret = getopt(argc, argv, ":p:h")) != -1) {
+	while ((ret = getopt(argc, argv, ":p:t:h")) != -1) {
 		switch (ret) {
 			/* get server port number */
 			case 'p':
-				port = (unsigned int) atoi(optarg);
+				tcp_port = (unsigned int) atoi(optarg);
 				/* check port range */
-				if (port < 4001 || port > 4008) {
+				if (tcp_port < 4001 || tcp_port > 4008) {
 					fprintf(stderr, "error: port number out of 4001-4008 range\n");
 					return -1;
 				}
+				break;
+			/* get tty device path */
+			case 't':
+				sprintf(tty_path, optarg);
 				break;
 			/* print help and exit */
 			case 'h':
@@ -51,15 +59,25 @@ int main(int argc, char *argv[]) {
 				return 0;
 		}
 	}
+	if (strlen(tty_path) == 0) {
+		fprintf(stderr, "error parsing arguments\n");
+		usage();
+		return 0;
+	}
 	
 	/* introduction message */
 	fprintf(stderr, "=== MoxaNix ===\n");
 	
+	//TODO remove the following line after development phase
+	fprintf(stderr, "TCP port: %d, TTY device path: %s\n", tcp_port, tty_path); 
+	
 	/* initialize */
-	server_setup(&server, port);
+	server_setup(&server, tcp_port);
 	client.socket = -1;
 	
-	//TODO this is a good place to create and start the TTY thread
+	
+	//TODO this is a good place to create and start the TTY thread, use "tty_path" when opening device
+	
 	
 	/* loop with timeouts waiting for client connection */
 	while (1) {

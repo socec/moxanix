@@ -2,11 +2,12 @@
 
 
 /* Opens the tty device and configures it. */
-int tty_open(struct tty_t *tty_dev) {
+int tty_open(struct tty_t *tty_dev, char* path) {
 	// PROPOSAL:
 	// open tty device to get file descriptor @tty_dev.fd
 	// setup tty device parameters @tty_dev.ttyset
 	// apply settings by calling tcsetattr(fd, ttyset)
+	// on success copy path to @tty_dev.path
 	return 0;
 }
 /* Closes the tty device. */
