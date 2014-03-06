@@ -3,12 +3,14 @@
 
 
 #define SERVER_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
+#define PORT_MIN 4001 /* minimum TCP port number */
+#define PORT_MAX 4008 /* maximum TCP port number */
 
 /* Prints help message. */
 void usage() {
 	//TODO maybe some styling should be done
 	fprintf(stderr, "Usage: moxerver -p tcp_port -t tty_path [-h]\n");
-	fprintf(stderr, "- tcp_port must be in range 4001 to 4008\n\n");
+	fprintf(stderr, "- tcp_port range [%d .. %d]\n\n", PORT_MIN, PORT_MAX);
 }
 
 /* MoxaNix main program loop. */
@@ -28,22 +30,17 @@ int main(int argc, char *argv[]) {
 	struct timeval tv;
 	
 	
-	/* grab arguments */
+	/* check argument count */
 	if (argc <= 1) {
-		fprintf(stderr, "error parsing arguments\n");
 		usage();
 		return 0;
 	}
+	/* grab arguments */
 	while ((ret = getopt(argc, argv, ":p:t:h")) != -1) {
 		switch (ret) {
 			/* get server port number */
 			case 'p':
 				tcp_port = (unsigned int) atoi(optarg);
-				/* check port range */
-				if (tcp_port < 4001 || tcp_port > 4008) {
-					fprintf(stderr, "error: port number out of 4001-4008 range\n");
-					return -1;
-				}
 				break;
 			/* get tty device path */
 			case 't':
@@ -59,8 +56,14 @@ int main(int argc, char *argv[]) {
 				return 0;
 		}
 	}
+	/* check arguments */
+	if (tcp_port < PORT_MIN || tcp_port > PORT_MAX) {
+		fprintf(stderr, "error: port number out of %d-%d range\n\n", PORT_MIN, PORT_MAX);
+		usage();
+		return -1;
+	}
 	if (strlen(tty_path) == 0) {
-		fprintf(stderr, "error parsing arguments\n");
+		fprintf(stderr, "error: tty path was not specified\n\n");
 		usage();
 		return 0;
 	}
