@@ -1,4 +1,4 @@
-#include "moxerver_include.h"
+#include "moxerver.h"
 #include <unistd.h> /* getopt() */
 
 
@@ -24,7 +24,12 @@ int main(int argc, char *argv[]) {
 	struct timeval tv;
 	
 	
-	/* grab argumments */
+	/* grab arguments */
+	if (argc == 1) {
+		fprintf(stderr, "error parsing arguments\n");
+		usage();
+		return 0;
+	}
 	while ((ret = getopt(argc, argv, ":p:h")) != -1) {
 		switch (ret) {
 			/* get server port number */
