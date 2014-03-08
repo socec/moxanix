@@ -51,6 +51,14 @@ int client_read(struct client_t *client);
 int client_write(struct client_t *client, char *databuf, int datalen);
 
 
+/* Tells client to go into "character" mode. */
+int telnet_set_character_mode(struct client_t *client);
+/* Handles special characters in data buffer after receiving them from client. */
+int telnet_handle_client_read(char *databuf, int *datalen);
+/* Handles special characters in data buffer before sending to client. */
+int telnet_handle_client_write(char *databuf, int *datalen);
+
+
 /* Opens the tty device and configures it. */
 int tty_open(struct tty_t *tty_dev, char* path);
 /* Closes the tty device. */
@@ -61,3 +69,6 @@ int tty_reconfigure(struct tty_t *tty_dev, struct termios newttyset);
 int tty_read(struct tty_t *tty_dev);
 /* Sends data from a buffer to tty device. */
 int tty_write(struct tty_t *tty_dev, char *databuf, int datalen);
+
+
+

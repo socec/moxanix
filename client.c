@@ -23,26 +23,49 @@ int client_read(struct client_t *client) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
-	/* null-terminate received data */
-	client->data[len] = '\0';
 	
-	//TODO how does a client disconnect? For now let's wait for QUIT command...
-	if (!strncmp(client->data, "QUIT", 4)) {
-		client_close(client);
+	//TODO let's print received bytes during development phase...
+	{
+		int i;
+		for(i = 0; i < len; i++) {
+			fprintf(stderr, "client %s <- %u '%c'\n",
+					client->ip_string,
+					(unsigned char) client->data[i],
+					(unsigned char) client->data[i]);
+		}	
 	}
 	
-	//TODO let's print the data during development phase...
-	fprintf(stderr, "client %s says: %s", client->ip_string, client->data);
+	/* handle special telnet characters coming from client */
+	telnet_handle_client_read(client->data, &len);
 	
-	return 0;
+	return len;
 }
 
 /* Sends data from a buffer to client. */
 int client_write(struct client_t *client, char *databuf, int datalen) {
+	
+	int len;
+	
+	/* handle special telnet characters to display them correctly on client */
+	telnet_handle_client_write(databuf, &datalen);
+	
+	//TODO let's print received bytes during development phase...
+	{
+		int i;
+		for(i = 0; i < len; i++) {
+			fprintf(stderr, "client %s -> %u '%c'\n",
+					client->ip_string,
+					(unsigned char) databuf[i],
+					(unsigned char) databuf[i]);
+		}	
+	}
+	
 	/* send data to client */
-	if (send(client->socket, databuf, datalen, 0) == -1) {
+	len = send(client->socket, databuf, datalen, 0);
+	if (len == -1) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
-	return 0;
+	
+	return len;
 }

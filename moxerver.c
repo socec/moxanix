@@ -2,12 +2,12 @@
 #include <unistd.h> /* getopt() */
 
 
-#define SERVER_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
+#define SERVER_WAIT_TIMEOUT 10 /* seconds for select() timeout in server loop */
 #define PORT_MIN 4001 /* minimum TCP port number */
 #define PORT_MAX 4008 /* maximum TCP port number */
 
 /* Prints help message. */
-void usage() {
+static void usage() {
 	//TODO maybe some styling should be done
 	fprintf(stderr, "Usage: moxerver -p tcp_port -t tty_path [-h]\n");
 	fprintf(stderr, "- tcp_port range [%d .. %d]\n\n", PORT_MIN, PORT_MAX);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 	//TODO this is a good place to create and start the TTY thread, use "tty_path" when opening device
 	
 	
-	/* loop with timeouts waiting for client connection */
+	/* loop with timeouts waiting for client connection and data*/
 	while (1) {
 		
 		/* setup parameters for select() */
@@ -114,6 +114,8 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "problem accepting client\n");
 						continue;
 					}
+					/* put client in "character" mode */
+					telnet_set_character_mode(&client);
 				}
 				/* reject connection request if a client is already connected */
 				else {
@@ -124,12 +126,15 @@ int main(int argc, char *argv[]) {
 			if ( (client.socket != -1) && FD_ISSET(client.socket, &read_fds) ) {
 				/* read client data */
 				ret = client_read(&client);
-				if ( ret != 0) {
+				if ( ret < 0) {
 					/* print error but continue waiting for new data */
 					fprintf(stderr, "problem reading client\n");
 					continue;
 				}
-				//TODO we should send this data to TTY device
+				/* echo back to client */
+				client_write(&client, client.data, ret);
+				
+				//TODO we should send this data to TTY device here
 			}
 		}
 		if (ret == 0) {
