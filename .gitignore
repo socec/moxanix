@@ -1,4 +1,6 @@
 # executables
 moxerver
 
+# object files
+*.o
 
