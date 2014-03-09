@@ -85,6 +85,11 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
+	/* make client socket non-blocking */
+	if (fcntl(accepted_client->socket, F_SETFL, O_NONBLOCK) == -1) {
+		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
+		return -errno;
+	}
 	
 	/* get client IP address as human readable string */
 	inet_ntop(accepted_client->address.sin_family, &accepted_client->address.sin_addr.s_addr, 

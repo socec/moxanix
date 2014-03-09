@@ -1,7 +1,7 @@
 #include "moxerver.h"
 
 
-#define SERVER_WAIT_TIMEOUT 10 /* seconds for select() timeout in server loop */
+#define SERVER_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
 #define PORT_MIN 4001 /* minimum TCP port number */
 #define PORT_MAX 4008 /* maximum TCP port number */
 
@@ -137,7 +137,18 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		if (ret == 0) {
-			fprintf(stderr, "server waiting\n");
+			/* check if client disconnected */
+			/* a disconnected client socket is ready for reading but read returns 0 */
+			if ( (client.socket != -1) && FD_ISSET(client.socket, &read_fds) ) {
+				if (client_read(&client) == 0) {
+					fprintf(stderr, "client %s disconnected\n", client.ip_string);
+					/* close client connection */
+					client_close(&client);
+				}
+			}
+			else {
+				fprintf(stderr, "server waiting\n");
+			}
 		}
 		
 	} /* END while loop */
