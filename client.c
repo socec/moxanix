@@ -52,7 +52,7 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 	//TODO let's print received bytes during development phase...
 	{
 		int i;
-		for(i = 0; i < len; i++) {
+		for(i = 0; i < datalen; i++) {
 			fprintf(stderr, "client %s -> %u '%c'\n",
 					client->ip_string,
 					(unsigned char) databuf[i],

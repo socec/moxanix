@@ -41,7 +41,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 	
 	/* check port assignment */
 	namelen = sizeof(server->address);
-	if (getsockname(server->socket, (struct sockaddr *) &server->address, &namelen) == -1) {
+	if (getsockname(server->socket, (struct sockaddr *) &server->address, (socklen_t *) &namelen) == -1) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
@@ -80,7 +80,7 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	
 	/* accept connection request */
 	namelen = sizeof(accepted_client->address);
-	accepted_client->socket = accept(server->socket, (struct sockaddr *) &accepted_client->address, &namelen);
+	accepted_client->socket = accept(server->socket, (struct sockaddr *) &accepted_client->address, (socklen_t *) &namelen);
 	if (accepted_client->socket == -1) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
@@ -106,13 +106,13 @@ int server_reject(struct server_t *server) {
 	
 	/* accept connection request */
 	namelen = sizeof(rclient.address);
-	rclient.socket = accept(server->socket, (struct sockaddr *) &rclient.address, &namelen);
+	rclient.socket = accept(server->socket, (struct sockaddr *) &rclient.address, (socklen_t *) &namelen);
 	/* send reject message */
 	sprintf(reject_msg, "[%s]: port %u is already being used\n", __func__, server->port);
 	send(rclient.socket, reject_msg, strlen(reject_msg), 0);
 	/* close connection */
 	close(rclient.socket);
 	
-	fprintf(stderr, "[%s]: rejected new client request, there is alredy a client connected\n", __func__, server->port);
+	fprintf(stderr, "[%s]: rejected new client request, there is alredy a client connected\n", __func__);
 	return 0;
 }

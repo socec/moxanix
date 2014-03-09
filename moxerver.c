@@ -1,5 +1,4 @@
 #include "moxerver.h"
-#include <unistd.h> /* getopt() */
 
 
 #define SERVER_WAIT_TIMEOUT 10 /* seconds for select() timeout in server loop */
