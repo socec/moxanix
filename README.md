@@ -1,8 +1,7 @@
 moxanix
 =======
 
-Moxanix project implements a serial device server.
-It provides console access to multiple serial devices through telnet connection.
+A serial device server, provides console access to multiple serial devices through telnet connection.
 
 
 moxerver
