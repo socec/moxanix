@@ -31,7 +31,7 @@ $(TARGET): $(OBJECTS)
 .PHONY: default all clean
 
 # all calls all other options
-all: default clean
+all: default
 
 # default builds target
 default: $(TARGET)
