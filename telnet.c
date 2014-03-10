@@ -55,7 +55,7 @@ int telnet_send_command(struct client_t *client, const char* option, const char*
 		return -1;
 	}
 	
-	fprintf(stderr, "[%s]: sent %s %s\n", __func__, option, command);
+	fprintf(stderr, "[%s] sent %s %s\n", __func__, option, command);
 	return 0;
 }
 
@@ -63,7 +63,7 @@ int telnet_send_command(struct client_t *client, const char* option, const char*
 int telnet_handle_command(char *databuf, int datalen) {
 	
 	if (databuf[0] == telnet_option_value("IAC")) {
-		fprintf(stderr, "[%s]: received %s %s\n", __func__,
+		fprintf(stderr, "[%s] received %s %s\n", __func__,
 				telnet_option_name(databuf[1]), telnet_option_name(databuf[2]));
 	}
 	
@@ -122,13 +122,13 @@ int telnet_handle_client_write(char *databuf, int *datalen) {
 	for (i = 0; i < *datalen; i++) {
 		/* pressed ENTER */
 		if (databuf[i] == 13) {
-			fprintf(stderr, "[%s]: handling ENTER\n", __func__);
+			fprintf(stderr, "[%s] handling ENTER\n", __func__);
 			newdata[newlen++] = '\r';
 			newdata[newlen++] = '\n';
 		}
 		/* pressed BACKSPACE */
 		if (databuf[i] == 127) {
-			fprintf(stderr, "[%s]: handling BACKSPACE\n", __func__);
+			fprintf(stderr, "[%s] handling BACKSPACE\n", __func__);
 			newdata[newlen++] = 8;
 			newdata[newlen++] = ' ';
 			newdata[newlen++] = 8;

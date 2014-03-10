@@ -8,7 +8,7 @@ int client_close(struct client_t *client) {
 		close(client->socket);
 	}
 	client->socket = -1;
-	fprintf(stderr,"[%s]: socket closed for client %s\n", __func__, client->ip_string);
+	fprintf(stderr,"[%s] socket closed for client %s\n", __func__, client->ip_string);
 	return 0;
 }
 

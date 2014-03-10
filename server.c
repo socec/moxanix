@@ -17,7 +17,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
-	fprintf(stderr,"[%s]: socket created\n", __func__);
+	fprintf(stderr,"[%s] socket created\n", __func__);
 	
 	/* try to avoid "Address already in use" error */
 	opt = 1; /* true value for setsockopt option */
@@ -37,7 +37,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
-	fprintf(stderr,"[%s]: bind successful\n", __func__);
+	fprintf(stderr,"[%s] bind successful\n", __func__);
 	
 	/* check port assignment */
 	namelen = sizeof(server->address);
@@ -51,7 +51,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 	}
 	/* save server port number */
 	server->port = port;
-	fprintf(stderr,"[%s]: assigned port %u\n", __func__, server->port); //ntohs(server->address.sin_port)
+	fprintf(stderr,"[%s] assigned port %u\n", __func__, server->port); //ntohs(server->address.sin_port)
 	
 	/* listen for a client connection, allow 2 connections in queue */
 	if (listen(server->socket, 2) == -1) {
@@ -59,7 +59,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 		return -errno;
 	}
 	
-	fprintf(stderr,"[%s]: server is up, listening for client connection\n", __func__);
+	fprintf(stderr,"[%s] server is up, listening for client connection\n", __func__);
 	return 0;
 }
 
@@ -69,7 +69,7 @@ int server_close(struct server_t *server) {
 	if (close(server->socket) == -1) {
 		close(server->socket);
 	}
-	fprintf(stderr,"[%s]: socket closed, server is down\n", __func__);
+	fprintf(stderr,"[%s] socket closed, server is down\n", __func__);
 	return 0;
 }
 
@@ -97,7 +97,7 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	
 	/* print client information */
 	//TODO also print timestamp
-	fprintf(stderr, "[%s]: accepted client %s on port %u\n", __func__,
+	fprintf(stderr, "[%s] accepted client %s on port %u\n", __func__,
 			accepted_client->ip_string, server->port);
 	return 0;
 }
@@ -113,11 +113,11 @@ int server_reject(struct server_t *server) {
 	namelen = sizeof(rclient.address);
 	rclient.socket = accept(server->socket, (struct sockaddr *) &rclient.address, (socklen_t *) &namelen);
 	/* send reject message */
-	sprintf(reject_msg, "[%s]: port %u is already being used\n", __func__, server->port);
+	sprintf(reject_msg, "[%s] port %u is already being used\n", __func__, server->port);
 	send(rclient.socket, reject_msg, strlen(reject_msg), 0);
 	/* close connection */
 	close(rclient.socket);
 	
-	fprintf(stderr, "[%s]: rejected new client request, there is alredy a client connected\n", __func__);
+	fprintf(stderr, "[%s] rejected new client request, there is alredy a client connected\n", __func__);
 	return 0;
 }
