@@ -23,11 +23,11 @@ static void usage() {
 /* Performs cleanup and exit. */
 void cleanup(int exit_code) {
 	fprintf(stderr, "[%s] cleanup and exit with %d\n", NAME, exit_code);
-	/* close server and client */
-	server_close(&server);
+	/* close client and server */
 	if (client.socket != -1) {
 		client_close(&client);
 	}
+	server_close(&server);
 	exit(exit_code);
 }
 
@@ -153,6 +153,13 @@ int main(int argc, char *argv[]) {
 			if ( (client.socket != -1) && FD_ISSET(client.socket, &read_fds) ) {
 				/* read client data */
 				ret = client_read(&client);
+				/* check if client disconnected */
+				if (ret == -ENODATA) {
+					fprintf(stderr, "[%s] client %s disconnected\n", NAME, client.ip_string);
+					/* close client connection and continue waiting for new clients */
+					client_close(&client);
+					continue;
+				}
 				if ( ret < 0) {
 					/* print error but continue waiting for new data */
 					fprintf(stderr, "[%s] problem reading client\n", NAME);
@@ -165,18 +172,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		if (ret == 0) {
-			/* check if client disconnected */
-			/* a disconnected client socket is ready for reading but read returns 0 */
-			if ( (client.socket != -1) && FD_ISSET(client.socket, &read_fds) ) {
-				if (client_read(&client) == 0) {
-					fprintf(stderr, "[%s] client %s disconnected\n", NAME, client.ip_string);
-					/* close client connection */
-					client_close(&client);
-				}
-			}
-			else {
-				fprintf(stderr, "[%s] server waiting\n", NAME);
-			}
+			fprintf(stderr, "[%s] server waiting\n", NAME);
 		}
 		
 	} /* END while() loop */

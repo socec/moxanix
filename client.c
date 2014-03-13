@@ -23,6 +23,11 @@ int client_read(struct client_t *client) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
+	/* a disconnected client socket is ready for reading but read returns 0 */
+	if (len == 0) {
+		fprintf(stderr, "[%s:%d] no data available from client\n", __func__, __LINE__);
+		return -ENODATA; //TODO document this in header
+	}
 	
 	//TODO let's print received bytes during development phase...
 	{
