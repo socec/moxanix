@@ -1,5 +1,7 @@
 #include "moxerver.h"
-
+#include <string.h>
+#define TTY_THREAD_TIMEOUT_SEC 30
+#define NAME "tty"
 
 /* Opens the tty device and configures it. */
 int tty_open(struct tty_t *tty_dev, char* path) {
@@ -35,3 +37,25 @@ int tty_write(struct tty_t *tty_dev, char *databuf, int datalen) {
 	// databuf should point to client data buffer
 	return 0;
 }
+
+void *tty_thread_func(void *arg) {
+	int i = 0;
+	char *str;
+	str = (char*)arg;
+
+	fprintf(stderr, "[%s] tty thread started with passed argument: %s\n", NAME, str);
+
+	//while ((i * 10) < TTY_THREAD_TIMEOUT_SEC) {
+	while (1) {
+		sleep(10);
+		fprintf(stderr, "[%s] tty thread reporting ...\n", NAME);
+		i++;
+	}
+
+	fprintf(stderr, "[%s] tty thread stoped\n", NAME);
+
+	strncpy(str, "bye", strlen(str));
+	
+	return (void *)str;
+}
+

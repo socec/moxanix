@@ -71,6 +71,7 @@ int tty_reconfigure(struct tty_t *tty_dev, struct termios newttyset);
 int tty_read(struct tty_t *tty_dev);
 /* Sends data from a buffer to tty device. */
 int tty_write(struct tty_t *tty_dev, char *databuf, int datalen);
-
+/* Main tty thread function */
+void *tty_thread_func(void *arg);
 
 

@@ -7,11 +7,11 @@ INCDIRS = -I.
 LIBDIRS = -L
 # used libraries
 #LIBS = -lm
-LIBS = -l
+LIBS = -lpthread
 
 # compiler and flags
 CC = gcc
-CFLAGS = -Wall $(INCDIRS) $(LIBDIRS)
+CFLAGS = -Wall $(INCDIRS) $(LIBDIRS) $(LIBS)
 
 # objects are .o files created from all .c files in the directory (same name)
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))

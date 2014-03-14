@@ -1,5 +1,6 @@
 #include "moxerver.h"
 #include <signal.h> /* handling quit signals */
+#include <pthread.h>
 
 #define NAME "moxerver"
 
@@ -49,6 +50,8 @@ int main(int argc, char *argv[]) {
 	fd_set read_fds;
 	int fdmax;
 	struct timeval tv;
+
+	pthread_t tty_thread; 
 	
 	
 	/* catch and handle some quit signals, SIGKILL can't be caught */
@@ -107,7 +110,7 @@ int main(int argc, char *argv[]) {
 	
 	
 	//TODO this is a good place to create and start the TTY thread, use "tty_path" when opening device
-	
+	ret = pthread_create(&tty_thread, NULL, tty_thread_func, "starting tty thread...");
 	
 	/* loop with timeouts waiting for client connection and data*/
 	while (1) {
@@ -176,6 +179,8 @@ int main(int argc, char *argv[]) {
 		}
 		
 	} /* END while() loop */
+	
+	pthread_join(tty_thread, NULL);
 	
 	/* unexpected break from while() loop */
 	fprintf(stderr, "[%s] unexpected condition\n", NAME);
