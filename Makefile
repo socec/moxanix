@@ -11,7 +11,7 @@ LIBS = -lpthread
 
 # compiler and flags
 CC = gcc
-CFLAGS = -Wall $(INCDIRS) $(LIBDIRS) $(LIBS)
+CFLAGS = -Wall $(INCDIRS) $(LIBDIRS)
 
 # objects are .o files created from all .c files in the directory (same name)
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
