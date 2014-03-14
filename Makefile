@@ -1,7 +1,7 @@
 # target name
 TARGET = moxerver
 
-# special include directiories
+# special include directories
 INCDIRS = -I.
 # special library directories
 LIBDIRS = -L
@@ -11,7 +11,7 @@ LIBS = -lpthread
 
 # compiler and flags
 CC = gcc
-CFLAGS = -Wall $(INCDIRS) $(LIBDIRS)
+CFLAGS = -Wall $(INCDIRS) $(LIBDIRS) $(LIBS)
 
 # objects are .o files created from all .c files in the directory (same name)
 OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
@@ -36,7 +36,7 @@ all: default
 # default builds target
 default: $(TARGET)
 
-# clean removec object files and target
+# clean removed object files and target
 clean:
 	-rm -f *.o
 	-rm -f $(TARGET)
