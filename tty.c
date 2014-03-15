@@ -4,13 +4,20 @@
 #define NAME "tty"
 
 /* Opens the tty device and configures it. */
-int tty_open(struct tty_t *tty_dev, char* path) {
+int tty_open(struct tty_t *tty_dev) {
+	int fd;
 	// PROPOSAL:
 	// open tty device to get file descriptor @tty_dev.fd
 	// setup tty device parameters @tty_dev.ttyset
 	// apply settings by calling tcsetattr(fd, ttyset)
 	// on success copy path to @tty_dev.path
+	if ((fd = open (tty_dev->path, O_RDWR | O_NOCTTY | O_SYNC)) < 0)
+		return -errno;
+	else 
+		tty_dev->fd = fd;
+		
 	return 0;
+	
 }
 /* Closes the tty device. */
 int tty_close(struct tty_t *tty_dev) {

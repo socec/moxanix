@@ -62,7 +62,7 @@ int telnet_handle_client_write(char *databuf, int *datalen);
 
 
 /* Opens the tty device and configures it. */
-int tty_open(struct tty_t *tty_dev, char* path);
+int tty_open(struct tty_t *tty_dev);
 /* Closes the tty device. */
 int tty_close(struct tty_t *tty_dev);
 /* Reconfigures the tty device. */

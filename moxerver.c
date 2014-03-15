@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
 	
 	unsigned int tcp_port = -1;
 	char tty_path[DEV_PATH] = {'\0'};
+	struct tty_t tty_dev;
 	
 	fd_set read_fds;
 	int fdmax;
@@ -96,6 +97,9 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "[%s] error: tty path was not specified\n\n", NAME);
 		usage();
 		return -1;
+	} else {
+		/* set tty device path to in tty_dev struct */
+		strcpy(tty_dev.path, tty_path);
 	}
 	
 	/* introduction message */
@@ -110,6 +114,12 @@ int main(int argc, char *argv[]) {
 	
 	
 	//TODO this is a good place to create and start the TTY thread, use "tty_path" when opening device
+	if (tty_open(&tty_dev) < 0) {
+		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
+				"\t-> continuing in echo mode\n", NAME, tty_path); 
+		//return -1;
+	}
+
 	ret = pthread_create(&tty_thread, NULL, tty_thread_func, "starting tty thread...");
 	
 	/* loop with timeouts waiting for client connection and data*/
