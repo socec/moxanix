@@ -12,7 +12,6 @@
 /* Global variables used throughout the application */
 struct server_t server;
 struct client_t client; //TODO working with only 1 client, this can be expanded into a list
-struct tty_t tty_dev;
 
 /* Prints help message. */
 static void usage() {
@@ -116,7 +115,7 @@ int main(int argc, char *argv[]) {
 	//TODO this is a good place to create and start the TTY thread, use "tty_path" when opening device
 	if (tty_open(&tty_dev) < 0) {
 		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
-				"\t-> continuing in echo mode\n", NAME, tty_path); 
+				"\t\t-> continuing in echo mode\n", NAME, tty_path); 
 		//return -1;
 	}
 
