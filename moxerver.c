@@ -12,6 +12,7 @@
 /* Global variables used throughout the application */
 struct server_t server;
 struct client_t client; //TODO working with only 1 client, this can be expanded into a list
+struct tty_t tty_dev;
 
 /* Prints help message. */
 static void usage() {
@@ -44,15 +45,12 @@ int main(int argc, char *argv[]) {
 	int ret;
 	
 	unsigned int tcp_port = -1;
-	char tty_path[DEV_PATH] = {'\0'};
-	struct tty_t tty_dev;
 	
 	fd_set read_fds;
 	int fdmax;
 	struct timeval tv;
 
 	pthread_t tty_thread; 
-	
 	
 	/* catch and handle some quit signals, SIGKILL can't be caught */
 	signal(SIGTERM, quit_handler);
@@ -73,7 +71,15 @@ int main(int argc, char *argv[]) {
 				break;
 			/* get tty device path */
 			case 't':
-				sprintf(tty_path, optarg);
+				if ((strnlen(optarg, DEV_PATH) == 0) || 
+					(strnlen(optarg, DEV_PATH) > (DEV_PATH - 1))) {
+					fprintf(stderr, "[%s] error: tty path was not specified\n\n", NAME);
+					usage();
+					return -1;
+				} else {
+					/* set tty device path to in tty_dev struct */
+					strcpy(tty_dev.path, optarg);
+				}
 				break;
 			/* print help and exit */
 			case 'h':
@@ -92,34 +98,26 @@ int main(int argc, char *argv[]) {
 		usage();
 		return -1;
 	}
-	if (strlen(tty_path) == 0) {
-		fprintf(stderr, "[%s] error: tty path was not specified\n\n", NAME);
-		usage();
-		return -1;
-	} else {
-		/* set tty device path to in tty_dev struct */
-		strcpy(tty_dev.path, tty_path);
-	}
 	
 	/* introduction message */
 	fprintf(stderr, "[%s] === MoxaNix ===\n", NAME);
 	
 	//TODO remove the following line after development phase
-	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_path); 
+	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path); 
 	
 	/* initialize */
 	server_setup(&server, tcp_port);
 	client.socket = -1;
 	
 	
-	//TODO this is a good place to create and start the TTY thread, use "tty_path" when opening device
+	//TODO this is a good place to create and start the TTY thread, use "tty_dev.path" when opening device
 	if (tty_open(&tty_dev) < 0) {
 		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
-				"\t\t-> continuing in echo mode\n", NAME, tty_path); 
+				"\t\t-> continuing in echo mode\n", NAME, tty_dev.path); 
 		//return -1;
 	}
 
-	ret = pthread_create(&tty_thread, NULL, tty_thread_func, "starting tty thread...");
+	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev);
 	
 	/* loop with timeouts waiting for client connection and data*/
 	while (1) {

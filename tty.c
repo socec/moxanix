@@ -15,7 +15,27 @@ int tty_open(struct tty_t *tty_dev) {
 		return -errno;
 	else 
 		tty_dev->fd = fd;
-		
+
+	tty_dev->ttyset.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR |
+								 PARMRK | INPCK | ISTRIP | IXON);
+	tty_dev->ttyset.c_oflag &= ~(OCRNL | ONLCR | ONLRET |
+								 ONOCR | OFILL | OLCUC | OPOST);
+	tty_dev->ttyset.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+	tty_dev->ttyset.c_cflag &= ~(CSIZE | PARENB);
+	tty_dev->ttyset.c_cflag |= CS8;
+	tty_dev->ttyset.c_cc[VMIN]  = 1;
+	tty_dev->ttyset.c_cc[VTIME] = 0;
+
+	if(cfsetispeed(&(tty_dev->ttyset), B115200) < 0 || cfsetospeed(&(tty_dev->ttyset), B115200) < 0) {
+		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+		return -errno;
+    }
+    
+    if(tcsetattr(tty_dev->fd, TCSAFLUSH, &(tty_dev->ttyset)) < 0) {
+		fprintf(stderr, "[%s] error configuring tty device\n", NAME);
+		return -errno;
+    }
+
 	return 0;
 	
 }
@@ -46,23 +66,24 @@ int tty_write(struct tty_t *tty_dev, char *databuf, int datalen) {
 }
 
 void *tty_thread_func(void *arg) {
-	int i = 0;
-	char *str;
-	str = (char*)arg;
+	//int i = 0;
+	char c;
+	struct tty_t *tty_dev = (struct tty_t*)arg;	
 
-	fprintf(stderr, "[%s] tty thread started with passed argument: %s\n", NAME, str);
+	fprintf(stderr, "[%s] tty thread started with passed argument: %s\n", NAME, tty_dev->path);
 
 	//while ((i * 10) < TTY_THREAD_TIMEOUT_SEC) {
 	while (1) {
-		sleep(10);
-		fprintf(stderr, "[%s] tty thread reporting ...\n", NAME);
-		i++;
+		//sleep(10);
+		if (read(tty_dev->fd, &c, 1) > 0)        
+			printf("%c", c);              
+		     	                                
+		//fprintf(stderr, "[%s] tty thread reporting ...\n", NAME);
+		//i++;
 	}
 
 	fprintf(stderr, "[%s] tty thread stoped\n", NAME);
 
-	strncpy(str, "bye", strlen(str));
-	
-	return (void *)str;
+	return (void *)tty_dev;;
 }
 
