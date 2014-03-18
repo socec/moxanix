@@ -1,7 +1,12 @@
 #include "moxerver.h"
 
 
-/* Closes client connection. */
+/**
+ * Closes client connection.
+ * 
+ * Returns:
+ * 0 always, but internally tries closing again if it fails.
+ */
 int client_close(struct client_t *client) {
 	/* force closing in case of error */
 	if (close(client->socket) == -1) {
@@ -12,7 +17,14 @@ int client_close(struct client_t *client) {
 	return 0;
 }
 
-/* Reads incoming data from client to client data buffer. */
+/**
+ * Reads data from client into client data buffer.
+ * 
+ * Returns:
+ * - number of read bytes on success,
+ * - negative ENODATA value (-ENODATA) if client disconnected,
+ * - negative errno value set appropriately by error in reading
+ */
 int client_read(struct client_t *client) {
 	
 	int len;
@@ -26,7 +38,7 @@ int client_read(struct client_t *client) {
 	/* a disconnected client socket is ready for reading but read returns 0 */
 	if (len == 0) {
 		fprintf(stderr, "[%s:%d] no data available from client\n", __func__, __LINE__);
-		return -ENODATA; //TODO document this in header
+		return -ENODATA;
 	}
 	
 	//TODO let's print received bytes during development phase...
@@ -46,7 +58,13 @@ int client_read(struct client_t *client) {
 	return len;
 }
 
-/* Sends data from a buffer to client. */
+/**
+ * Sends data from a buffer to client.
+ * 
+ * Returns:
+ * - number of sent bytes on success,
+ * - negative errno value set appropriately by error in sending
+ */
 int client_write(struct client_t *client, char *databuf, int datalen) {
 	
 	int len;

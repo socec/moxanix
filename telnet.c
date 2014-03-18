@@ -70,7 +70,13 @@ static int telnet_handle_command(char *databuf, int datalen) {
 	return 0;
 }
 
-/* Tells client to go into "character" mode. */
+/**
+ * Tells client to go into "character" mode.
+ * 
+ * Returns:
+ * - 0 on success
+ * - negative value if error occurred
+ */
 int telnet_set_character_mode(struct client_t *client) {
 	
 	int err = 0;
@@ -85,7 +91,13 @@ int telnet_set_character_mode(struct client_t *client) {
 	return err;
 }
 
-/* Handles special characters in data buffer after receiving them from client. */
+/**
+ * Handles special characters in data buffer after receiving them from client.
+ * Used to filter out handshake commands of telnet protocol.
+ * 
+ * Returns:
+ * 0 always
+ */
 int telnet_handle_client_read(char *databuf, int *datalen) {	
 	
 	int i;
@@ -111,7 +123,13 @@ int telnet_handle_client_read(char *databuf, int *datalen) {
 	return 0;
 }
 
-/* Handles special characters in data buffer before sending to client. */
+/**
+ * Handles special characters in data buffer before sending to client.
+ * Used for echoing characters correctly to telnet client.
+ * 
+ * Returns:
+ * 0 always
+ */
 int telnet_handle_client_write(char *databuf, int *datalen) {
 	
 	int i;

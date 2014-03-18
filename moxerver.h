@@ -14,6 +14,8 @@
 #define DATA_BUFLEN 128
 #define DEV_PATH 32
 
+
+/* Structures used for communication parameters. */
 struct server_t {
 	int socket; 					/* server socket */
 	struct sockaddr_in address; 	/* server address information */
@@ -41,29 +43,100 @@ struct client_t client; 	/* connected client structure */ //TODO working with on
 struct tty_t tty_dev; 		/* connected tty device */
 
 
-/* Sets up the server on specific port, binds to a socket and listens for client connections. */
+/* Functions handling server operation. */
+
+/**
+ * Sets up the server on specific port, binds to a socket and listens for client connections.
+ *
+ * Returns:
+ * - 0 on success,
+ * - negative errno value set appropriately by error in setup process
+ */
 int server_setup(struct server_t *server, unsigned int port);
-/* Closes the server. */
+
+/**
+ * Closes the server socket.
+ * 
+ * Returns:
+ * 0 always, but internally tries closing again if it fails.
+ */
 int server_close(struct server_t *server);
-/* Accepts incoming client connection. */
+
+/**
+ * Accepts incoming client connection.
+ * 
+ * Returns:
+ * - 0 on success,
+ * - negative errno value set appropriately by error in setup process
+ */
 int server_accept(struct server_t *server, struct client_t *accepted_client);
-/* Rejects incoming client connection. */
+
+/**
+ * Rejects incoming client connection.
+ * 
+ * Returns:
+ * 0 always, errors with rejected client are ignored
+ */
 int server_reject(struct server_t *server);
 
 
-/* Closes client connection. */
+/* Functions handling communication with clients. */
+
+/**
+ * Closes client connection.
+ * 
+ * Returns:
+ * 0 always, but internally tries closing again if it fails.
+ */
 int client_close(struct client_t *client);
-/* Reads incoming data from client to client data buffer. */
+
+/**
+ * Reads data from client into client data buffer.
+ * 
+ * Returns:
+ * - number of read bytes on success,
+ * - negative ENODATA value (-ENODATA) if client disconnected,
+ * - negative errno value set appropriately by error in reading
+ */
 int client_read(struct client_t *client);
-/* Sends data from a buffer to client. */
+
+/**
+ * Sends data from a buffer to client.
+ * 
+ * Returns:
+ * - number of sent bytes on success,
+ * - negative errno value set appropriately by error in sending
+ */
 int client_write(struct client_t *client, char *databuf, int datalen);
 
 
-/* Tells client to go into "character" mode. */
+/* Functions handling details related to telnet protocol. */
+
+/**
+ * Tells client to go into "character" mode.
+ * 
+ * Returns:
+ * - 0 on success
+ * - negative value if error occurred
+ */
 int telnet_set_character_mode(struct client_t *client);
-/* Handles special characters in data buffer after receiving them from client. */
+
+/**
+ * Handles special characters in data buffer after receiving them from client.
+ * Used to filter out handshake commands of telnet protocol.
+ * 
+ * Returns:
+ * 0 always
+ */
 int telnet_handle_client_read(char *databuf, int *datalen);
-/* Handles special characters in data buffer before sending to client. */
+
+/**
+ * Handles special characters in data buffer before sending to client.
+ * Used for echoing characters correctly to telnet client.
+ * 
+ * Returns:
+ * 0 always
+ */
 int telnet_handle_client_write(char *databuf, int *datalen);
 
 
