@@ -4,7 +4,7 @@ TARGET = moxerver
 # special include directories
 INCDIRS = -I.
 # special library directories
-LIBDIRS = -L
+LIBDIRS = -L.
 # used libraries
 #LIBS = -lm
 LIBS = -lpthread
@@ -20,11 +20,11 @@ HEADERS = $(wildcard *.h)
 
 # all objects are built from their .c files and all headers in the directory
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) $(LIBS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # target is built from all object files
 $(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(LIBS) $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) $(CFLAGS) -o $@
 
 
 # support for default, clean and all options

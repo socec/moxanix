@@ -1,6 +1,7 @@
 #include "moxerver.h"
 #include <string.h>
 #define TTY_THREAD_TIMEOUT_SEC 30
+#define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
 #define NAME "tty"
 
 /* Opens the tty device and configures it. */
@@ -61,22 +62,41 @@ int tty_read(struct tty_t *tty_dev) {
 
 /* Sends data from a buffer to tty device. */
 int tty_write(struct tty_t *tty_dev, char *databuf, int datalen) {
+	write(tty_dev->fd, databuf, datalen);
 	// databuf should point to client data buffer
 	return 0;
 }
 
+/* Main thread for reading and writing to tty device */
 void *tty_thread_func(void *arg) {
-	//int i = 0;
-	char c;
+	//char c;
 	struct tty_t *tty_dev = (struct tty_t*)arg;	
+	struct timeval tv;
+	ssize_t br = 0;
+	int ret;
+	fd_set read_fds;
 
 	fprintf(stderr, "[%s] tty thread started with passed argument: %s\n", NAME, tty_dev->path);
 
-	//while ((i * 10) < TTY_THREAD_TIMEOUT_SEC) {
 	while (1) {
+		/* setup parameters for select() */
+		tv.tv_sec = TTY_WAIT_TIMEOUT;
+		tv.tv_usec = 0;
+		FD_ZERO(&read_fds);
+		FD_SET(tty_dev->fd, &read_fds);
+		
+		/* wait with select() */
+		ret = select(tty_dev->fd + 1, &read_fds, NULL, NULL, &tv);
+
+		if (ret > 0 && FD_ISSET(tty_dev->fd, &read_fds)) {
+			br = read(tty_dev->fd, tty_dev->data, DATA_BUFLEN);
+			client_write(&client, tty_dev->data, br);
+		}
+		else {
+		}
 		//sleep(10);
-		if (read(tty_dev->fd, &c, 1) > 0)        
-			printf("%c", c);              
+		//if (read(tty_dev->fd, &c, 1) > 0)        
+		//	printf("%c", c); 
 		     	                                
 		//fprintf(stderr, "[%s] tty thread reporting ...\n", NAME);
 		//i++;

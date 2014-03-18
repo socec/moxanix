@@ -10,9 +10,9 @@
 
 
 /* Global variables used throughout the application */
-struct server_t server;
-struct client_t client; //TODO working with only 1 client, this can be expanded into a list
-struct tty_t tty_dev;
+//struct server_t server;
+//struct client_t client; //TODO working with only 1 client, this can be expanded into a list
+//struct tty_t tty_dev;
 
 /* Prints help message. */
 static void usage() {
@@ -176,9 +176,10 @@ int main(int argc, char *argv[]) {
 					continue;
 				}
 				/* echo back to client */
-				client_write(&client, client.data, ret);
+				//client_write(&client, client.data, ret);
 				
 				//TODO we should send this data to TTY device here
+				tty_write(&tty_dev, client.data, ret); 
 			}
 		}
 		if (ret == 0) {

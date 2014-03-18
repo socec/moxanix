@@ -52,7 +52,7 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 	int len;
 	
 	/* handle special telnet characters to display them correctly on client */
-	telnet_handle_client_write(databuf, &datalen);
+	//telnet_handle_client_write(databuf, &datalen);
 	
 	//TODO let's print received bytes during development phase...
 	{
