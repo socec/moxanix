@@ -9,11 +9,6 @@
 #define PORT_MAX 4008 /* maximum TCP port number */
 
 
-/* Global variables used throughout the application */
-//struct server_t server;
-//struct client_t client; //TODO working with only 1 client, this can be expanded into a list
-//struct tty_t tty_dev;
-
 /* Prints help message. */
 static void usage() {
 	//TODO maybe some styling should be done
@@ -24,10 +19,13 @@ static void usage() {
 /* Performs cleanup and exit. */
 void cleanup(int exit_code) {
 	fprintf(stderr, "[%s] cleanup and exit with %d\n", NAME, exit_code);
-	/* close client and server */
+	/* close client */
 	if (client.socket != -1) {
 		client_close(&client);
 	}
+	/* close tty device */
+	tty_close(&tty_dev);
+	/* close server */
 	server_close(&server);
 	exit(exit_code);
 }
@@ -77,7 +75,7 @@ int main(int argc, char *argv[]) {
 					usage();
 					return -1;
 				} else {
-					/* set tty device path to in tty_dev struct */
+					/* set tty device path in tty_dev struct */
 					strcpy(tty_dev.path, optarg);
 				}
 				break;
@@ -93,6 +91,7 @@ int main(int argc, char *argv[]) {
 	}
 	/* check arguments */
 	if (tcp_port < PORT_MIN || tcp_port > PORT_MAX) {
+		//TODO do we really put port constraints in moxerver? Maybe higher SW layer that controls all servers should handle it.
 		fprintf(stderr, "[%s] error: port number out of %d-%d range\n\n",
 				NAME, PORT_MIN, PORT_MAX);
 		usage();
@@ -109,15 +108,15 @@ int main(int argc, char *argv[]) {
 	server_setup(&server, tcp_port);
 	client.socket = -1;
 	
-	
-	//TODO this is a good place to create and start the TTY thread, use "tty_dev.path" when opening device
+	/* open tty device */
 	if (tty_open(&tty_dev) < 0) {
 		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
 				"\t\t-> continuing in echo mode\n", NAME, tty_dev.path); 
 		//return -1;
 	}
-
-	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev);
+	
+	/* start thread that handles tty device */
+	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev); //TODO check return value?
 	
 	/* loop with timeouts waiting for client connection and data*/
 	while (1) {
@@ -163,7 +162,7 @@ int main(int argc, char *argv[]) {
 			if ( (client.socket != -1) && FD_ISSET(client.socket, &read_fds) ) {
 				/* read client data */
 				ret = client_read(&client);
-				/* check if client disconnected */
+				/* check if client disconnected or other errors occurred */
 				if (ret == -ENODATA) {
 					fprintf(stderr, "[%s] client %s disconnected\n", NAME, client.ip_string);
 					/* close client connection and continue waiting for new clients */
@@ -175,10 +174,7 @@ int main(int argc, char *argv[]) {
 					fprintf(stderr, "[%s] problem reading client\n", NAME);
 					continue;
 				}
-				/* echo back to client */
-				//client_write(&client, client.data, ret);
-				
-				//TODO we should send this data to TTY device here
+				/* pass received data to tty device */
 				tty_write(&tty_dev, client.data, ret); 
 			}
 		}
@@ -188,11 +184,10 @@ int main(int argc, char *argv[]) {
 		
 	} /* END while() loop */
 	
-	pthread_join(tty_thread, NULL);
-	
 	/* unexpected break from while() loop */
 	fprintf(stderr, "[%s] unexpected condition\n", NAME);
 	/* cleanup and exit with -1 */
+	pthread_join(tty_thread, NULL); //TODO maybe we should be able to kill this thread now, what if we wait forever?
 	cleanup(-1);
 	
 	return -1;

@@ -1,5 +1,5 @@
 #include "moxerver.h"
-#include <string.h>
+
 #define TTY_THREAD_TIMEOUT_SEC 30
 #define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
 #define NAME "tty"

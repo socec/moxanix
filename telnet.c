@@ -17,9 +17,9 @@ struct telnet_option_t telnet_options[] = {
 	{"ECHO", 1},
 	{"SGA", 3},
 	{"LINEMODE", 34},
-	{"SLE", 45}
 };
-#define TELNET_OPTIONS_COUNT 9 /* keep this up with the number of supported options */
+#define TELNET_OPTIONS_COUNT 8 /* keep this up with the number of supported options */
+//TODO implement this list with last element being NULL so we don't need to keep count
 
 /* Returns telnet option name based on the value. */
 static const char* telnet_option_name(int value) {
@@ -40,7 +40,7 @@ static char telnet_option_value(const char* name) {
 }
 
 /* Sends telnet option command. */
-int telnet_send_command(struct client_t *client, const char* option, const char* command) {
+static int telnet_send_command(struct client_t *client, const char* option, const char* command) {
 	
 	char data[3];
 	
@@ -60,7 +60,7 @@ int telnet_send_command(struct client_t *client, const char* option, const char*
 }
 
 /* Handles received telnet option command. */
-int telnet_handle_command(char *databuf, int datalen) {
+static int telnet_handle_command(char *databuf, int datalen) {
 	
 	if (databuf[0] == telnet_option_value("IAC")) {
 		fprintf(stderr, "[%s] received %s %s\n", __func__,

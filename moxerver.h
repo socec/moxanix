@@ -34,9 +34,12 @@ struct tty_t {
 	char data[DATA_BUFLEN]; 	/* buffer for data received from tty */
 };
 
-struct server_t server;
-struct client_t client; //TODO working with only 1 client, this can be expanded into a list
-struct tty_t tty_dev;
+
+/* Global variables used throughout the application. */
+struct server_t server; 	/* main server structure */
+struct client_t client; 	/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
+struct tty_t tty_dev; 		/* connected tty device */
+
 
 /* Sets up the server on specific port, binds to a socket and listens for client connections. */
 int server_setup(struct server_t *server, unsigned int port);
