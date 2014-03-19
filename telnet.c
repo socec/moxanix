@@ -39,7 +39,7 @@ static char telnet_option_value(const char* name) {
 	return 0;
 }
 
-/* Sends telnet option command. */
+/* Sends telnet option command. Returns 0 on success, -1 on failure. */
 static int telnet_send_command(struct client_t *client, const char* option, const char* command) {
 	
 	char data[3];
@@ -59,9 +59,10 @@ static int telnet_send_command(struct client_t *client, const char* option, cons
 	return 0;
 }
 
-/* Handles received telnet option command. */
+/* Handles received telnet option command. Always returns 0.*/
 static int telnet_handle_command(char *databuf, int datalen) {
 	
+	/* currently just print received commands because we set the client, we don't adapt to client commands */
 	if (databuf[0] == telnet_option_value("IAC")) {
 		fprintf(stderr, "[%s] received %s %s\n", __func__,
 				telnet_option_name(databuf[1]), telnet_option_name(databuf[2]));
@@ -70,13 +71,7 @@ static int telnet_handle_command(char *databuf, int datalen) {
 	return 0;
 }
 
-/**
- * Tells client to go into "character" mode.
- * 
- * Returns:
- * - 0 on success
- * - negative value if error occurred
- */
+/* Tells client to go into "character" mode. */
 int telnet_set_character_mode(struct client_t *client) {
 	
 	int err = 0;
@@ -91,13 +86,8 @@ int telnet_set_character_mode(struct client_t *client) {
 	return err;
 }
 
-/**
- * Handles special characters in data buffer after receiving them from client.
- * Used to filter out handshake commands of telnet protocol.
- * 
- * Returns:
- * 0 always
- */
+/* Handles special characters in data buffer after receiving them from client.
+ * Used to filter out handshake commands of telnet protocol. */
 int telnet_handle_client_read(char *databuf, int *datalen) {	
 	
 	int i;
@@ -123,13 +113,8 @@ int telnet_handle_client_read(char *databuf, int *datalen) {
 	return 0;
 }
 
-/**
- * Handles special characters in data buffer before sending to client.
- * Used for echoing characters correctly to telnet client.
- * 
- * Returns:
- * 0 always
- */
+/* Handles special characters in data buffer before sending to client.
+ * Used for echoing characters correctly to telnet client. */
 int telnet_handle_client_write(char *databuf, int *datalen) {
 	
 	int i;

@@ -1,13 +1,7 @@
 #include "moxerver.h"
 
 
-/**
- * Sets up the server on specific port, binds to a socket and listens for client connections.
- *
- * Returns:
- * - 0 on success,
- * - negative errno value set appropriately by error in setup process
- */
+/* Sets up the server on specific port, binds to a socket and listens for client connections. */
 int server_setup(struct server_t *server, unsigned int port) {
 	
 	int namelen, opt;
@@ -69,12 +63,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 	return 0;
 }
 
-/**
- * Closes the server socket.
- * 
- * Returns:
- * 0 always, but internally tries closing again if it fails.
- */
+/* Closes the server socket. */
 int server_close(struct server_t *server) {
 	/* force closing in case of error */
 	if (close(server->socket) == -1) {
@@ -84,13 +73,7 @@ int server_close(struct server_t *server) {
 	return 0;
 }
 
-/**
- * Accepts incoming client connection.
- * 
- * Returns:
- * - 0 on success,
- * - negative errno value set appropriately by error in setup process
- */
+/* Accepts incoming client connection. */
 int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	
 	int namelen;
@@ -119,12 +102,7 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	return 0;
 }
 
-/**
- * Rejects incoming client connection.
- * 
- * Returns:
- * 0 always, errors with rejected client are ignored
- */
+/* Rejects incoming client connection. Errors with rejected client are ignored. */
 int server_reject(struct server_t *server) {
 	
 	int namelen;
