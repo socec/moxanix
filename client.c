@@ -1,5 +1,8 @@
-#include "moxerver.h"
+/* 
+ * Handling communication with clients.
+ */
 
+#include "moxerver.h"
 
 /* Closes client connection. */
 int client_close(struct client_t *client) {

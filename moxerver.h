@@ -140,6 +140,8 @@ int telnet_handle_client_read(char *databuf, int *datalen);
 int telnet_handle_client_write(char *databuf, int *datalen);
 
 
+/* Functions handling communication with tty device. */
+
 /* Opens the tty device and configures it. */
 int tty_open(struct tty_t *tty_dev);
 /* Closes the tty device. */

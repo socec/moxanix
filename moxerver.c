@@ -1,3 +1,9 @@
+/* 
+ * Main server application.
+ * Handles client connections on specific TCP port and allows bidirectional
+ * communication with a specific TTY device.
+ */
+
 #include "moxerver.h"
 #include <signal.h> /* handling quit signals */
 #include <pthread.h>
@@ -7,7 +13,6 @@
 #define SERVER_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
 #define PORT_MIN 4001 /* minimum TCP port number */
 #define PORT_MAX 4008 /* maximum TCP port number */
-
 
 /* Prints help message. */
 static void usage() {

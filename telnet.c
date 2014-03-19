@@ -1,5 +1,8 @@
-#include "moxerver.h"
+/* 
+ * Handling details related to telnet protocol. 
+ */
 
+#include "moxerver.h"
 
 /* structure for holding telnet option name and value */
 struct telnet_option_t {
@@ -17,25 +20,27 @@ struct telnet_option_t telnet_options[] = {
 	{"ECHO", 1},
 	{"SGA", 3},
 	{"LINEMODE", 34},
+	{NULL, 0}
+	/* this list must end with {NULL, 0} */
 };
-#define TELNET_OPTIONS_COUNT 8 /* keep this up with the number of supported options */
-//TODO implement this list with last element being NULL so we don't need to keep count
 
 /* Returns telnet option name based on the value. */
 static const char* telnet_option_name(int value) {
-	int i;
-	for (i = 0; i < TELNET_OPTIONS_COUNT; i ++)
-		if (telnet_options[i].value == value)
-			return telnet_options[i].name;
+	int i = 0;
+	while (telnet_options[i].name) {
+		if (telnet_options[i].value == value) return telnet_options[i].name;
+		i++;
+	}
 	return '\0';
 }
 
 /* Returns telnet option value based on the name. */
 static char telnet_option_value(const char* name) {
-	int i;
-	for (i = 0; i < TELNET_OPTIONS_COUNT; i ++)
-		if (!strcmp(telnet_options[i].name, name))
-			return telnet_options[i].value;
+	int i = 0;
+	while (telnet_options[i].name) {
+		if (!strcmp(telnet_options[i].name, name)) return telnet_options[i].value;
+		i++;
+	}
 	return 0;
 }
 

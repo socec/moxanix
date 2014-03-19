@@ -1,3 +1,7 @@
+/* 
+ * Handling communication with tty device.
+ */
+
 #include "moxerver.h"
 
 #define TTY_THREAD_TIMEOUT_SEC 30

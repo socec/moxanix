@@ -1,5 +1,8 @@
-#include "moxerver.h"
+/* 
+ * Handling server operation.
+ */
 
+#include "moxerver.h"
 
 /* Sets up the server on specific port, binds to a socket and listens for client connections. */
 int server_setup(struct server_t *server, unsigned int port) {
