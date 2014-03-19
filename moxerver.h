@@ -10,10 +10,12 @@
 #include <netinet/tcp.h> /* TCP_NODELAY */
 #include <arpa/inet.h>
 #include <termios.h>
+#include <time.h>
 
-#define DATA_BUFLEN 128
+#define DATABUF_LEN 128
 #define DEV_PATH 32
-
+#define TIMESTAMP_FORMAT "%d.%m.%Y. %H:%M:%S"
+#define TIMESTAMP_LEN 20+1 /* calculated following timestamp format */
 
 /* Structures used for communication parameters. */
 struct server_t {
@@ -26,14 +28,15 @@ struct client_t {
 	int socket; 						/* client socket */
 	struct sockaddr_in address; 		/* client address information */
 	char ip_string[INET_ADDRSTRLEN]; 	/* client IP address as a string */
-	char data[DATA_BUFLEN]; 			/* buffer for data received from client */
+	time_t last_active; 				/* time of client's last activity in seconds from Epoch */
+	char data[DATABUF_LEN]; 			/* buffer for data received from client */
 };
 
 struct tty_t {
 	int fd; 					/* tty file descriptor */
 	struct termios ttyset;		/* tty termios settings */
 	char path[DEV_PATH]; 		/* tty device path */
-	char data[DATA_BUFLEN]; 	/* buffer for data received from tty */
+	char data[DATABUF_LEN]; 	/* buffer for data received from tty */
 };
 
 
@@ -41,6 +44,17 @@ struct tty_t {
 struct server_t server; 	/* main server structure */
 struct client_t client; 	/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
 struct tty_t tty_dev; 		/* connected tty device */
+
+
+/* Global functions used throughout the application. */
+
+/**
+ * Converts from time in seconds from Epoch to conveniently formatted string.
+ * 
+ * Returns:
+ * 0 always
+ */
+int time2string(time_t time, char* timestamp);
 
 
 /* Functions handling server operation. */
@@ -58,7 +72,7 @@ int server_setup(struct server_t *server, unsigned int port);
  * Closes the server socket.
  * 
  * Returns:
- * 0 always, but internally tries closing again if it fails.
+ * 0 always, but internally tries closing again if it fails
  */
 int server_close(struct server_t *server);
 
@@ -86,12 +100,13 @@ int server_reject(struct server_t *server);
  * Closes client connection.
  * 
  * Returns:
- * 0 always, but internally tries closing again if it fails.
+ * 0 always, but internally tries closing again if it fails
  */
 int client_close(struct client_t *client);
 
 /**
  * Reads data from client into client data buffer.
+ * Also updates client's last activity timestamp.
  * 
  * Returns:
  * - number of read bytes on success,

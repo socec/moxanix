@@ -11,14 +11,12 @@
 #define NAME "moxerver"
 
 #define SERVER_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
-#define PORT_MIN 4001 /* minimum TCP port number */
-#define PORT_MAX 4008 /* maximum TCP port number */
 
 /* Prints help message. */
 static void usage() {
 	//TODO maybe some styling should be done
-	fprintf(stderr, "Usage: moxerver -p tcp_port -t tty_path [-h]\n");
-	fprintf(stderr, "- tcp_port range [%d .. %d]\n\n", PORT_MIN, PORT_MAX);
+	fprintf(stderr, "Usage: %s -p tcp_port -t tty_path [-h]\n", NAME);
+	fprintf(stderr, "\n");
 }
 
 /* Performs cleanup and exit. */
@@ -40,6 +38,12 @@ void quit_handler(int signum) {
     /* perform cleanup and exit with 0 */
 	fprintf(stderr, "[%s] received signal %d\n", NAME, signum);
 	cleanup(0);
+}
+
+/* Converts from time in seconds from Epoch to conveniently formatted string. */
+int time2string(time_t time, char* timestamp) {
+	strftime(timestamp, TIMESTAMP_LEN, TIMESTAMP_FORMAT, localtime(&time));
+	return 0;
 }
 
 /* MoxaNix main program loop. */
@@ -94,14 +98,6 @@ int main(int argc, char *argv[]) {
 				return -1;
 		}
 	}
-	/* check arguments */
-	if (tcp_port < PORT_MIN || tcp_port > PORT_MAX) {
-		//TODO do we really put port constraints in moxerver? Maybe higher SW layer that controls all servers should handle it.
-		fprintf(stderr, "[%s] error: port number out of %d-%d range\n\n",
-				NAME, PORT_MIN, PORT_MAX);
-		usage();
-		return -1;
-	}
 	
 	/* introduction message */
 	fprintf(stderr, "[%s] === MoxaNix ===\n", NAME);
@@ -152,6 +148,7 @@ int main(int argc, char *argv[]) {
 					ret = server_accept(&server, &client);
 					if ( ret != 0) {
 						/* print error but continue waiting for connection request */
+						//TODO maybe we should break here to avoid endless loop
 						fprintf(stderr, "[%s] problem accepting client\n", NAME);
 						continue;
 					}
@@ -184,7 +181,17 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		if (ret == 0) {
-			fprintf(stderr, "[%s] server waiting\n", NAME);
+			/* do something with inactive client */
+			if (client.socket != -1) {
+				//TODO we could drop client if inactive for some time
+				time_t current_time = time(NULL);
+				fprintf(stderr, "[%s] client last active %u seconds ago\n", NAME,
+						(unsigned int) (current_time - client.last_active));
+			}
+			/* do something while listening for client connections */
+			else {
+				fprintf(stderr, "[%s] listening for client connection\n", NAME);
+			}
 		}
 		
 	} /* END while() loop */

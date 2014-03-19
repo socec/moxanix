@@ -96,7 +96,7 @@ int telnet_set_character_mode(struct client_t *client) {
 int telnet_handle_client_read(char *databuf, int *datalen) {	
 	
 	int i;
-	char newdata[DATA_BUFLEN];
+	char newdata[DATABUF_LEN];
 	int newlen = 0;
 	
 	/* process data using a new buffer */
@@ -123,7 +123,7 @@ int telnet_handle_client_read(char *databuf, int *datalen) {
 int telnet_handle_client_write(char *databuf, int *datalen) {
 	
 	int i;
-	char newdata[DATA_BUFLEN];
+	char newdata[DATABUF_LEN];
 	int newlen = 0;
 	
 	/* process data using a new buffer */

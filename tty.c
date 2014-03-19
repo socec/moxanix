@@ -93,7 +93,7 @@ void *tty_thread_func(void *arg) {
 		ret = select(tty_dev->fd + 1, &read_fds, NULL, NULL, &tv);
 
 		if (ret > 0 && FD_ISSET(tty_dev->fd, &read_fds)) {
-			br = read(tty_dev->fd, tty_dev->data, DATA_BUFLEN);
+			br = read(tty_dev->fd, tty_dev->data, DATABUF_LEN);
 			client_write(&client, tty_dev->data, br);
 		}
 		else {

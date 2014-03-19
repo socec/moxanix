@@ -8,6 +8,7 @@
 int server_setup(struct server_t *server, unsigned int port) {
 	
 	int opt;
+	char timestamp[TIMESTAMP_LEN];
 	
 	/* set up server address information */
 	server->address.sin_family = AF_INET; 			/* use IPv4 address family */
@@ -52,17 +53,20 @@ int server_setup(struct server_t *server, unsigned int port) {
 		return -errno;
 	}
 	
-	fprintf(stderr,"[%s] server is up, listening for client connection\n", __func__);
+	time2string(time(NULL), timestamp);
+	fprintf(stderr,"[%s] server is up @ %s\n", __func__, timestamp);
 	return 0;
 }
 
 /* Closes the server socket. */
 int server_close(struct server_t *server) {
+	char timestamp[TIMESTAMP_LEN];
 	/* force closing in case of error */
 	if (close(server->socket) == -1) {
 		close(server->socket);
 	}
-	fprintf(stderr,"[%s] socket closed, server is down\n", __func__);
+	time2string(time(NULL), timestamp);
+	fprintf(stderr,"[%s] socket closed, server is down @ %s\n", __func__, timestamp);
 	return 0;
 }
 
@@ -70,6 +74,7 @@ int server_close(struct server_t *server) {
 int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	
 	int namelen;
+	char timestamp[TIMESTAMP_LEN];
 	
 	/* accept connection request */
 	namelen = sizeof(accepted_client->address);
@@ -88,10 +93,13 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	inet_ntop(accepted_client->address.sin_family, &accepted_client->address.sin_addr.s_addr, 
 				accepted_client->ip_string, INET_ADDRSTRLEN);
 	
+	/* grab current time and store it as client last activity*/
+	accepted_client->last_active = time(NULL);
+	
 	/* print client information */
-	//TODO also print timestamp
-	fprintf(stderr, "[%s] accepted client %s on port %u\n", __func__,
-			accepted_client->ip_string, server->port);
+	time2string(accepted_client->last_active, timestamp);
+	fprintf(stderr, "[%s] accepted client %s on port %u @ %s\n", __func__,
+			accepted_client->ip_string, server->port, timestamp);
 	return 0;
 }
 
@@ -101,6 +109,7 @@ int server_reject(struct server_t *server) {
 	int namelen;
 	struct client_t rclient;
 	char reject_msg[128];
+	char timestamp[TIMESTAMP_LEN];
 	
 	/* accept connection request */
 	namelen = sizeof(rclient.address);
@@ -111,6 +120,7 @@ int server_reject(struct server_t *server) {
 	/* close connection */
 	close(rclient.socket);
 	
-	fprintf(stderr, "[%s] rejected new client request, there is alredy a client connected\n", __func__);
+	time2string(time(NULL), timestamp);
+	fprintf(stderr, "[%s] rejected new client request @ %s\n", __func__, timestamp);
 	return 0;
 }

@@ -6,12 +6,14 @@
 
 /* Closes client connection. */
 int client_close(struct client_t *client) {
+	char timestamp[TIMESTAMP_LEN];
 	/* force closing in case of error */
 	if (close(client->socket) == -1) {
 		close(client->socket);
 	}
 	client->socket = -1;
-	fprintf(stderr,"[%s] socket closed for client %s\n", __func__, client->ip_string);
+	time2string(time(NULL), timestamp);
+	fprintf(stderr,"[%s] socket closed for client %s @ %s\n", __func__, client->ip_string, timestamp);
 	return 0;
 }
 
@@ -45,6 +47,9 @@ int client_read(struct client_t *client) {
 	
 	/* handle special telnet characters coming from client */
 	telnet_handle_client_read(client->data, &len);
+	
+	/* grab current time and store it as client last activity */
+	client->last_active = time(NULL);
 	
 	return len;
 }
