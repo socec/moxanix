@@ -7,7 +7,7 @@
 /* Sets up the server on specific port, binds to a socket and listens for client connections. */
 int server_setup(struct server_t *server, unsigned int port) {
 	
-	int namelen, opt;
+	int opt;
 	
 	/* set up server address information */
 	server->address.sin_family = AF_INET; 			/* use IPv4 address family */
@@ -42,16 +42,6 @@ int server_setup(struct server_t *server, unsigned int port) {
 	}
 	fprintf(stderr,"[%s] bind successful\n", __func__);
 	
-	/* check port assignment */
-	namelen = sizeof(server->address);
-	if (getsockname(server->socket, (struct sockaddr *) &server->address, (socklen_t *) &namelen) == -1) {
-		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
-		return -errno;
-	}
-	if (ntohs(server->address.sin_port) != port) {
-		fprintf(stderr, "[%s:%d] error: could not assign port %u\n", __func__, __LINE__, port);
-		return -1; //TODO find appropriate errno for this
-	}
 	/* save server port number */
 	server->port = port;
 	fprintf(stderr,"[%s] assigned port %u\n", __func__, server->port); //ntohs(server->address.sin_port)
