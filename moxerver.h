@@ -41,6 +41,7 @@ struct tty_t {
 
 
 /* Global variables used throughout the application. */
+int debug_messages; 		/* if > 0 debug messages will be printed */
 struct server_t server; 	/* main server structure */
 struct client_t client; 	/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
 struct tty_t tty_dev; 		/* connected tty device */

@@ -15,7 +15,8 @@
 /* Prints help message. */
 static void usage() {
 	//TODO maybe some styling should be done
-	fprintf(stderr, "Usage: %s -p tcp_port -t tty_path [-h]\n", NAME);
+	fprintf(stderr, "Usage: %s -p tcp_port -t tty_path [-d] [-h]\n", NAME);
+	fprintf(stderr, "\t-d\tturns on debug messages\n");
 	fprintf(stderr, "\n");
 }
 
@@ -70,7 +71,8 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	/* grab arguments */
-	while ((ret = getopt(argc, argv, ":p:t:h")) != -1) {
+	debug_messages = 0;
+	while ((ret = getopt(argc, argv, ":p:t:dh")) != -1) {
 		switch (ret) {
 			/* get server port number */
 			case 'p':
@@ -88,6 +90,10 @@ int main(int argc, char *argv[]) {
 					strcpy(tty_dev.path, optarg);
 				}
 				break;
+			/* enable debug messages */
+			case 'd':
+				debug_messages = 1;
+				break;
 			/* print help and exit */
 			case 'h':
 				usage();
@@ -101,9 +107,6 @@ int main(int argc, char *argv[]) {
 	
 	/* introduction message */
 	fprintf(stderr, "[%s] === MoxaNix ===\n", NAME);
-	
-	//TODO remove the following line after development phase
-	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path); 
 	
 	/* initialize */
 	server_setup(&server, tcp_port);
@@ -119,7 +122,7 @@ int main(int argc, char *argv[]) {
 	/* start thread that handles tty device */
 	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev); //TODO check return value?
 	
-	/* loop with timeouts waiting for client connection and data*/
+	/* loop with timeouts waiting for client connection and data */
 	while (1) {
 		
 		/* setup parameters for select() */
@@ -143,12 +146,12 @@ int main(int argc, char *argv[]) {
 			/* check server status */
 			if (FD_ISSET(server.socket, &read_fds)) {
 				fprintf(stderr, "[%s] received client connection request\n", NAME);
-				/* accept connection request if there is no client connected yet */
+				/* accept connection request if no client is connected */
 				if (client.socket == -1) {
 					ret = server_accept(&server, &client);
 					if ( ret != 0) {
 						/* print error but continue waiting for connection request */
-						//TODO maybe we should break here to avoid endless loop
+						//TODO maybe we should break here to avoid endless loop, what are possible causes of this failure?
 						fprintf(stderr, "[%s] problem accepting client\n", NAME);
 						continue;
 					}
@@ -185,12 +188,16 @@ int main(int argc, char *argv[]) {
 			if (client.socket != -1) {
 				//TODO we could drop client if inactive for some time
 				time_t current_time = time(NULL);
-				fprintf(stderr, "[%s] client last active %u seconds ago\n", NAME,
-						(unsigned int) (current_time - client.last_active));
+				if (debug_messages) {
+					fprintf(stderr, "[%s] client last active %u seconds ago\n", NAME,
+							(unsigned int) (current_time - client.last_active));
+				}
 			}
 			/* do something while listening for client connections */
 			else {
-				fprintf(stderr, "[%s] listening for client connection\n", NAME);
+				if (debug_messages) {
+					fprintf(stderr, "[%s] listening for client connection\n", NAME);
+				}
 			}
 		}
 		
@@ -199,7 +206,6 @@ int main(int argc, char *argv[]) {
 	/* unexpected break from while() loop */
 	fprintf(stderr, "[%s] unexpected condition\n", NAME);
 	/* cleanup and exit with -1 */
-	pthread_join(tty_thread, NULL); //TODO maybe we should be able to kill this thread now, what if we wait forever?
 	cleanup(-1);
 	
 	return -1;

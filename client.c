@@ -35,7 +35,7 @@ int client_read(struct client_t *client) {
 	}
 	
 	//TODO let's print received bytes during development phase...
-	{
+	if (debug_messages) {
 		int i;
 		for(i = 0; i < len; i++) {
 			fprintf(stderr, "client %s <- %u '%c'\n",
@@ -63,7 +63,7 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 	//telnet_handle_client_write(databuf, &datalen);
 	
 	//TODO let's print received bytes during development phase...
-	{
+	if (debug_messages) {
 		int i;
 		for(i = 0; i < datalen; i++) {
 			fprintf(stderr, "client %s -> %u '%c'\n",
