@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
 	pthread_t tty_thread; 
 	
-	/* catch and handle some quit signals, SIGKILL can't be caught */
+	/* enable catching and handling some quit signals, SIGKILL can't be caught */
 	signal(SIGTERM, quit_handler);
 	signal(SIGQUIT, quit_handler);
 	signal(SIGINT, quit_handler);
@@ -105,10 +105,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	/* introduction message */
-	fprintf(stderr, "[%s] === MoxaNix ===\n", NAME);
-	
 	/* initialize */
+	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path); 
 	if (server_setup(&server, tcp_port) < 0) return -1;
 	client.socket = -1;
 	tty_dev.fd = -1;

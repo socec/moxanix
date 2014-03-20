@@ -4,3 +4,5 @@ moxerver
 # object files
 *.o
 
+# logs directory during development
+logs
