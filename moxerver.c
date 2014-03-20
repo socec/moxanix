@@ -31,6 +31,7 @@ void cleanup(int exit_code) {
 	tty_close(&tty_dev);
 	/* close server */
 	server_close(&server);
+	/* exit */
 	exit(exit_code);
 }
 
@@ -51,7 +52,6 @@ int time2string(time_t time, char* timestamp) {
 int main(int argc, char *argv[]) {
 	
 	int ret;
-	
 	unsigned int tcp_port = -1;
 	
 	fd_set read_fds;
@@ -109,14 +109,15 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "[%s] === MoxaNix ===\n", NAME);
 	
 	/* initialize */
-	server_setup(&server, tcp_port);
+	if (server_setup(&server, tcp_port) < 0) return -1;
 	client.socket = -1;
+	tty_dev.fd = -1;
 	
 	/* open tty device */
 	if (tty_open(&tty_dev) < 0) {
 		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
 				"\t\t-> continuing in echo mode\n", NAME, tty_dev.path); 
-		//return -1;
+		debug_messages = 1;
 	}
 	
 	/* start thread that handles tty device */
@@ -180,7 +181,9 @@ int main(int argc, char *argv[]) {
 					continue;
 				}
 				/* pass received data to tty device */
-				tty_write(&tty_dev, client.data, ret); 
+				if (tty_dev.fd != -1) {
+					tty_write(&tty_dev, client.data, ret);
+				}
 			}
 		}
 		if (ret == 0) {
