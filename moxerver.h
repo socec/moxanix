@@ -16,6 +16,7 @@
 #define DEV_PATH 32
 #define TIMESTAMP_FORMAT "%d.%m.%Y. %H:%M:%S"
 #define TIMESTAMP_LEN 20+1 /* calculated following timestamp format */
+#define CONFILE "moxanix.cfg"
 
 /* Structures used for communication parameters. */
 struct server_t {
@@ -44,7 +45,7 @@ struct tty_t {
 int debug_messages; 		/* if > 0 debug messages will be printed */
 struct server_t server; 	/* main server structure */
 struct client_t client; 	/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
-struct tty_t tty_dev; 		/* connected tty device */
+struct tty_t tty_dev;		/* connected tty device */
 
 
 /* Global functions used throughout the application. */
@@ -160,15 +161,21 @@ int telnet_handle_client_write(char *databuf, int *datalen);
 
 /* Opens the tty device and configures it. */
 int tty_open(struct tty_t *tty_dev);
+
 /* Closes the tty device. */
 int tty_close(struct tty_t *tty_dev);
+
 /* Reconfigures the tty device. */
 int tty_reconfigure(struct tty_t *tty_dev, struct termios newttyset);
+
 /* Reads incoming data from tty device to tty data buffer. */
 int tty_read(struct tty_t *tty_dev);
+
 /* Sends data from a buffer to tty device. */
 int tty_write(struct tty_t *tty_dev, char *databuf, int datalen);
+
 /* Main tty thread function */
 void *tty_thread_func(void *arg);
-
+int speed_to_baud(speed_t speed);
+speed_t baud_to_speed(int baud);
 

@@ -5,6 +5,7 @@
  */
 
 #include "moxerver.h"
+#include "parser.h"
 #include <signal.h> /* handling quit signals */
 #include <pthread.h>
 
@@ -15,7 +16,8 @@
 /* Prints help message. */
 static void usage() {
 	//TODO maybe some styling should be done
-	fprintf(stderr, "Usage: %s -p tcp_port -t tty_path [-d] [-h]\n", NAME);
+	fprintf(stderr, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", NAME);
+	fprintf(stderr, "\t-t\ttty dev path (if not specified %s needs to be defined)\n", CONFILE);
 	fprintf(stderr, "\t-d\tturns on debug messages\n");
 	fprintf(stderr, "\n");
 }
@@ -48,17 +50,46 @@ int time2string(time_t time, char* timestamp) {
 	return 0;
 }
 
+/* Parse handler function, used to configure serial port */
+int parse_handler(void *user, const char *section, const char *name, const char *value) {
+	
+	printf("[%s] section = %s, name = %s, value = %s\n", __func__, section, name, value);
+	
+	if (!strcmp(name, "speed") && (unsigned int)atoi(section) == server.port) {
+		printf("[%s] setting %s speed for port %s\n", __func__, value, section);
+		
+		if (cfsetispeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0 || 
+			cfsetospeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0) {
+			fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+			return -1;
+   		}
+   	}
+	
+	if (!strcmp(name, "dev") && (unsigned int)atoi(section) == server.port) 
+		strcpy(tty_dev.path, value);
+
+	return 1;
+}
+
 /* MoxaNix main program loop. */
 int main(int argc, char *argv[]) {
 	
 	int ret;
 	unsigned int tcp_port = -1;
+	int def_conf = 0; 	// is default config used or from .cfg file
 	
 	fd_set read_fds;
 	int fdmax;
 	struct timeval tv;
 
 	pthread_t tty_thread; 
+
+	/* zero init tty_dev */
+	if (cfsetispeed(&(tty_dev.ttyset), B0) < 0 || 
+		cfsetospeed(&(tty_dev.ttyset), B0) < 0) {
+		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+		return -1;
+   	}
 	
 	/* enable catching and handling some quit signals, SIGKILL can't be caught */
 	signal(SIGTERM, quit_handler);
@@ -78,7 +109,7 @@ int main(int argc, char *argv[]) {
 			case 'p':
 				tcp_port = (unsigned int) atoi(optarg);
 				break;
-			/* get tty device path */
+			/* get tty device path, default config used */
 			case 't':
 				if ((strnlen(optarg, DEV_PATH) == 0) || 
 					(strnlen(optarg, DEV_PATH) > (DEV_PATH - 1))) {
@@ -89,6 +120,7 @@ int main(int argc, char *argv[]) {
 					/* set tty device path in tty_dev struct */
 					strcpy(tty_dev.path, optarg);
 				}
+				def_conf = 1;
 				break;
 			/* enable debug messages */
 			case 'd':
@@ -104,13 +136,23 @@ int main(int argc, char *argv[]) {
 				return -1;
 		}
 	}
-	
+
 	/* initialize */
 	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path); 
 	if (server_setup(&server, tcp_port) < 0) return -1;
 	client.socket = -1;
 	tty_dev.fd = -1;
 	
+	/* parse config file if any */
+	if (!def_conf && ((ret = ini_parse(CONFILE, &parse_handler, NULL)) == -1)) {
+		fprintf(stderr, "[%s] error opening config file %s\n", NAME, CONFILE);
+		usage();
+		return -1;
+	}
+	else if (!def_conf && ret) {
+		fprintf(stderr, "[%s] error parsing congig file %s on line %d\n", NAME, CONFILE, ret);
+		return -1;
+	}
 	/* open tty device */
 	if (tty_open(&tty_dev) < 0) {
 		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
