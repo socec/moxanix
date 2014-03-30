@@ -65,7 +65,7 @@ int parse_handler(void *user, const char *section, const char *name, const char 
    		}
    	}
 	
-	if (!strcmp(name, "dev") && (unsigned int)atoi(section) == server.port) 
+	if (!strcmp(name, "dev") && (unsigned int)atoi(section) == server.port)
 		strcpy(tty_dev.path, value);
 
 	return 1;
@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
 		return -1;
    	}
+
 	
 	/* enable catching and handling some quit signals, SIGKILL can't be caught */
 	signal(SIGTERM, quit_handler);
@@ -138,7 +139,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* initialize */
-	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path); 
 	if (server_setup(&server, tcp_port) < 0) return -1;
 	client.socket = -1;
 	tty_dev.fd = -1;
@@ -153,12 +153,21 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "[%s] error parsing congig file %s on line %d\n", NAME, CONFILE, ret);
 		return -1;
 	}
+	
+	if (!strcmp(tty_dev.path, "")) {
+		fprintf(stderr, "[%s] error: no tty device path given for TCP port: %d\n"
+				"\t\t-> check config file %s\n", NAME, tcp_port, CONFILE);
+		return -1;
+	}
+
 	/* open tty device */
 	if (tty_open(&tty_dev) < 0) {
 		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
 				"\t\t-> continuing in echo mode\n", NAME, tty_dev.path); 
 		debug_messages = 1;
 	}
+	
+	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path);
 	
 	/* start thread that handles tty device */
 	ret = pthread_create(&tty_thread, NULL, tty_thread_func, &tty_dev); //TODO check return value?
