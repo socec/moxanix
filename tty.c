@@ -33,9 +33,9 @@ int tty_open(struct tty_t *tty_dev) {
 							 	 ONOCR | OFILL | OLCUC | OPOST);
 	tty_dev->ttyset.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
 	tty_dev->ttyset.c_cflag &= ~(CSIZE | PARENB);
-	tty_dev->ttyset.c_cflag |= CS8;
+	tty_dev->ttyset.c_cflag |= CS8 | CREAD;
 	tty_dev->ttyset.c_cc[VMIN]  = 1;
-	tty_dev->ttyset.c_cc[VTIME] = 0;
+	tty_dev->ttyset.c_cc[VTIME] = 5;
 
 	/* if speed is set to B0 (e.g. cfg file is not provided), default values are used */
 	if (cfgetispeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
