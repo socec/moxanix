@@ -17,6 +17,7 @@
 #define TIMESTAMP_FORMAT "%d.%m.%Y. %H:%M:%S"
 #define TIMESTAMP_LEN 20+1 /* calculated following timestamp format */
 #define CONFILE "moxanix.cfg"
+#define USERNAME_LEN 32
 
 /* Structures used for communication parameters. */
 struct server_t {
@@ -30,6 +31,7 @@ struct client_t {
 	struct sockaddr_in address; 		/* client address information */
 	char ip_string[INET_ADDRSTRLEN]; 	/* client IP address as a string */
 	time_t last_active; 				/* time of client's last activity in seconds from Epoch */
+	char username[USERNAME_LEN]; 		/* username for human identification */
 	char data[DATABUF_LEN]; 			/* buffer for data received from client */
 };
 
@@ -94,7 +96,7 @@ int server_accept(struct server_t *server, struct client_t *accepted_client);
  * Returns:
  * 0 always, errors with rejected client are ignored
  */
-int server_reject(struct server_t *server);
+int server_reject(struct server_t *server, struct client_t *client);
 
 
 /* Functions handling communication with clients. */
@@ -126,6 +128,15 @@ int client_read(struct client_t *client);
  * - negative errno value set appropriately by error in sending
  */
 int client_write(struct client_t *client, char *databuf, int datalen);
+
+/**
+ * Waits for client to provide a username.
+ * Blocks until a username is entered.
+ *
+ * Returns:
+ * 0 always
+ */
+int client_ask_username(struct client_t *client);
 
 
 /* Functions handling details related to telnet protocol. */

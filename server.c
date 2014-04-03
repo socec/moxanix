@@ -104,7 +104,7 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 }
 
 /* Rejects incoming client connection. Errors with rejected client are ignored. */
-int server_reject(struct server_t *server) {
+int server_reject(struct server_t *server, struct client_t *client) {
 	
 	int namelen;
 	struct client_t rclient;
@@ -114,8 +114,10 @@ int server_reject(struct server_t *server) {
 	/* accept connection request */
 	namelen = sizeof(rclient.address);
 	rclient.socket = accept(server->socket, (struct sockaddr *) &rclient.address, (socklen_t *) &namelen);
-	/* send reject message */
-	sprintf(reject_msg, "[%s] port %u is already being used\n", __func__, server->port);
+	/* send reject message to client */
+	time2string(client->last_active, timestamp);
+	sprintf(reject_msg, "\nPort %u is already being used:\ncurrent user: %s\nlast activity: @ %s\n\n",
+			server->port, client->username, timestamp);
 	send(rclient.socket, reject_msg, strlen(reject_msg), 0);
 	/* close connection */
 	close(rclient.socket);

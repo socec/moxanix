@@ -82,3 +82,46 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 	
 	return len;
 }
+
+/* Waits for client to provide a username. Blocks until a username is entered. */
+int client_ask_username(struct client_t *client) {
+	
+	int i;
+	char databuf[DATABUF_LEN];
+	fd_set read_fds;
+	
+	/* send username request to client */
+	snprintf(databuf, DATABUF_LEN,
+			 "\nPlease provide a username to identify yourself to other users (max %d characters):\n", USERNAME_LEN);
+	client_write(client, databuf, strlen(databuf));
+	
+	/* wait for client input */
+	client->username[0] = '\0';
+	while (client->username[0] == '\0') {
+		/* send prompt character to client */
+		snprintf(databuf, DATABUF_LEN, "> ");
+		client_write(client, databuf, strlen(databuf));
+		/* setup select() parameters */
+		FD_ZERO(&read_fds);
+		FD_SET(client->socket, &read_fds);
+		select((client->socket)+1, &read_fds, NULL, NULL, NULL);
+		if (FD_ISSET(client->socket, &read_fds)) {
+			client_read(client);
+			/* handle client input */
+			for (i = 0; i < USERNAME_LEN; i++) {
+				if (client->data[i] == '\r') {
+					break;
+				}
+				client->username[i] = client->data[i];
+			}
+			client->username[i+1] = '\0';
+		}
+	}
+	
+	/* send welcome message to client */
+	snprintf(databuf, DATABUF_LEN,
+			 "\nWelcome %s!\n\n", client->username);
+	client_write(client, databuf, strlen(databuf));
+	
+	return 0;
+}

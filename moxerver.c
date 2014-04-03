@@ -210,12 +210,14 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "[%s] problem accepting client\n", NAME);
 						continue;
 					}
+					/* ask client to provide a username before going to "character" mode */
+					client_ask_username(&client);
 					/* put client in "character" mode */
 					telnet_set_character_mode(&client);
 				}
 				/* reject connection request if a client is already connected */
 				else {
-					server_reject(&server);
+					server_reject(&server, &client);
 				}
 			}
 			/* check client status if connected */
