@@ -26,7 +26,6 @@ start ()
 	
 	# set variables
 	TCP_PORT=$((4000 + $ID))
-	TTY_PATH="/dev/ttyS$ID"
 	
 	# check if requested server is already up
 	pid=$(ps axf | grep "[m]oxerver -p $TCP_PORT" | awk '{print $1}')
@@ -47,7 +46,7 @@ start ()
 	
 	# start server, redirect stdout and stderr to logfile
 	# nohup keeps it running when the script ends
-	nohup $SERVER_RUN -p $TCP_PORT -t $TTY_PATH > $LOGFILE 2>&1 &
+	nohup $SERVER_RUN -p $TCP_PORT > $LOGFILE 2>&1 &
 	echo "server $ID started"
 }
 
