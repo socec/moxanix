@@ -91,12 +91,15 @@ int server_close(struct server_t *server);
 int server_accept(struct server_t *server, struct client_t *accepted_client);
 
 /**
- * Rejects incoming client connection.
+ * Asks new incoming client connection if current client needs to be dropped.
+ * If current client doesn't need to be dropped then new client is rejected.
  * 
  * Returns:
- * 0 always, errors with rejected client are ignored
+ * - positive value if current client was dropped 
+ * - 0 if new client was rejected
+ * - negative value if error occurred
  */
-int server_reject(struct server_t *server, struct client_t *client);
+int server_drop(struct server_t *server, struct client_t *client);
 
 
 /* Functions handling communication with clients. */
@@ -130,11 +133,22 @@ int client_read(struct client_t *client);
 int client_write(struct client_t *client, char *databuf, int datalen);
 
 /**
+ * Waits for client input in "line mode", where client sends a whole line of characters.
+ * Blocks until input arrives.
+ * 
+ * Returns:
+ * - 0 on success
+ * - negative value if error occurred
+ */
+int client_wait_line(struct client_t *client);
+
+/**
  * Waits for client to provide a username.
  * Blocks until a username is entered.
  *
  * Returns:
- * 0 always
+ * - 0 on success
+ * - negative value if error occurred
  */
 int client_ask_username(struct client_t *client);
 

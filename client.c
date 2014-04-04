@@ -83,45 +83,66 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 	return len;
 }
 
+/* Waits for client input in "line mode". Blocks until input arrives. */
+int client_wait_line(struct client_t *client) {
+	
+	int ret;
+	fd_set read_fds;
+	
+	client->data[0] = '\0';
+	/* loop waiting for client input */
+	while (client->data[0] == '\0') {
+		/* setup select() parameters */
+		FD_ZERO(&read_fds);
+		FD_SET(client->socket, &read_fds);
+		/* send prompt character to client */
+		client_write(client, "> ", 2);
+		/* block until input arrives */
+		if (select((client->socket)+1, &read_fds, NULL, NULL, NULL) == -1) return -1;
+		if (FD_ISSET(client->socket, &read_fds)) {
+			/* read client input */
+			ret = client_read(client);
+			if (ret == -1) return -1;
+			/* we don't want empty data so stop on \r or \n */
+			if ( (client->data[0] == '\r') || (client->data[0] == '\n') ) {
+				fprintf(stderr, "client data is empty\n");
+				client->data[0] = '\0';
+			}
+		}
+	}
+	
+	fprintf(stderr, "client data: %s\n", client->data);
+	return 0;
+}
+
 /* Waits for client to provide a username. Blocks until a username is entered. */
 int client_ask_username(struct client_t *client) {
 	
 	int i;
-	char databuf[DATABUF_LEN];
-	fd_set read_fds;
+	char msg[DATABUF_LEN];
 	
 	/* send username request to client */
-	snprintf(databuf, DATABUF_LEN,
+	snprintf(msg, DATABUF_LEN,
 			 "\nPlease provide a username to identify yourself to other users (max %d characters):\n", USERNAME_LEN);
-	client_write(client, databuf, strlen(databuf));
+	client_write(client, msg, strlen(msg));
 	
 	/* wait for client input */
-	client->username[0] = '\0';
-	while (client->username[0] == '\0') {
-		/* send prompt character to client */
-		snprintf(databuf, DATABUF_LEN, "> ");
-		client_write(client, databuf, strlen(databuf));
-		/* setup select() parameters */
-		FD_ZERO(&read_fds);
-		FD_SET(client->socket, &read_fds);
-		select((client->socket)+1, &read_fds, NULL, NULL, NULL);
-		if (FD_ISSET(client->socket, &read_fds)) {
-			client_read(client);
-			/* handle client input */
-			for (i = 0; i < USERNAME_LEN; i++) {
-				if (client->data[i] == '\r') {
-					break;
-				}
-				client->username[i] = client->data[i];
-			}
-			client->username[i+1] = '\0';
+	if (client_wait_line(client) != 0) return -1;
+	
+	/* save received data as client username */
+	for (i = 0; i < USERNAME_LEN; i++) {
+		if ( (client->data[i] == '\r') || (client->data[i] == '\n') ) {
+			/* don't include \r or \n in username */
+			client->username[i] = '\0';
+			break;
 		}
+		client->username[i] = client->data[i];
 	}
 	
 	/* send welcome message to client */
-	snprintf(databuf, DATABUF_LEN,
+	snprintf(msg, DATABUF_LEN,
 			 "\nWelcome %s!\n\n", client->username);
-	client_write(client, databuf, strlen(databuf));
+	client_write(client, msg, strlen(msg));
 	
 	return 0;
 }

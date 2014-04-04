@@ -215,9 +215,22 @@ int main(int argc, char *argv[]) {
 					/* put client in "character" mode */
 					telnet_set_character_mode(&client);
 				}
-				/* reject connection request if a client is already connected */
+				/* if a client is already connected then new clients need to be handled */
 				else {
-					server_reject(&server, &client);
+					/* decide if current client needs to be dropped or new client needs to be rejected */
+					ret = server_drop(&server, &client);
+					if (ret < 0) {
+						/* error in handling new clients, print but continue waiting for new clients */
+						fprintf(stderr, "[%s] problem handling new client request\n", NAME);
+						continue;
+					}
+					/* if current client was dropped we need to set up new client */
+					if (ret > 0) {
+						/* ask client to provide a username before going to "character" mode */
+						client_ask_username(&client);
+						/* put client in "character" mode */
+						telnet_set_character_mode(&client);
+					}
 				}
 			}
 			/* check client status if connected */

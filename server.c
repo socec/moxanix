@@ -103,26 +103,53 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	return 0;
 }
 
-/* Rejects incoming client connection. Errors with rejected client are ignored. */
-int server_reject(struct server_t *server, struct client_t *client) {
+/* Drops current client or rejects new client. */
+int server_drop(struct server_t *server, struct client_t *current_client) {
 	
-	int namelen;
-	struct client_t rclient;
-	char reject_msg[128];
+	struct client_t new_client;
+	char msg[DATABUF_LEN];
 	char timestamp[TIMESTAMP_LEN];
 	
-	/* accept connection request */
-	namelen = sizeof(rclient.address);
-	rclient.socket = accept(server->socket, (struct sockaddr *) &rclient.address, (socklen_t *) &namelen);
-	/* send reject message to client */
-	time2string(client->last_active, timestamp);
-	sprintf(reject_msg, "\nPort %u is already being used:\ncurrent user: %s\nlast activity: @ %s\n\n",
-			server->port, client->username, timestamp);
-	send(rclient.socket, reject_msg, strlen(reject_msg), 0);
-	/* close connection */
-	close(rclient.socket);
+	/* accept new connection request */
+	if (server_accept(server, &new_client) != 0) return -1;
 	
-	time2string(time(NULL), timestamp);
-	fprintf(stderr, "[%s] rejected new client request @ %s\n", __func__, timestamp);
-	return 0;
+	/* inform new client that port is already in use */
+	time2string(current_client->last_active, timestamp);
+	sprintf(msg, "\nPort %u is already being used!\nCurrent user and last activity:\n%s @ %s\n",
+			server->port, current_client->username, timestamp);
+	send(new_client.socket, msg, strlen(msg), 0);
+	
+	/* ask new client if current client should be dropped */
+	sprintf(msg, "\nDo you want to drop the current user?\nIf yes then please type YES DROP (in uppercase):");
+	send(new_client.socket, msg, strlen(msg), 0);
+	
+	/* wait for client input */
+	if (client_wait_line(&new_client) != 0) return -1;
+	
+	/* check client confirmation */
+	if (strncmp(new_client.data, "YES DROP", 8) == 0) {
+		/* current client should be dropped, drop it */
+		client_close(current_client);
+		time2string(time(NULL), timestamp);
+		fprintf(stderr, "[%s] dropped current client %s on port %u @ %s\n", __func__,
+				current_client->ip_string, server->port, timestamp);
+		/* make new client the current client */
+		memcpy(current_client, &new_client, sizeof(struct client_t));
+		time2string(time(NULL), timestamp);
+		fprintf(stderr, "[%s] accepted new client request %s on port %u @ %s\n", __func__,
+				current_client->ip_string, server->port, timestamp);
+		/* return 1 because current client was dropped */
+		return 1;
+	}
+	else {
+		/* new connection should be rejected, close connection */
+		close(new_client.socket);
+		time2string(time(NULL), timestamp);
+		fprintf(stderr, "[%s] rejected new client request %s on port %u @ %s\n", __func__,
+				new_client.ip_string, server->port, timestamp);
+		/* return 0 because new client was rejected */
+		return 0;
+	}
+	
+	
 }
