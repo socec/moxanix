@@ -86,32 +86,31 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 /* Waits for client input in "line mode". Blocks until input arrives. */
 int client_wait_line(struct client_t *client) {
 	
-	int ret;
 	fd_set read_fds;
+	struct timeval tv;
 	
 	client->data[0] = '\0';
 	/* loop waiting for client input */
 	while (client->data[0] == '\0') {
 		/* setup select() parameters */
+		tv.tv_sec = 15; /* 15 second timeout */
+		tv.tv_usec = 0;
 		FD_ZERO(&read_fds);
 		FD_SET(client->socket, &read_fds);
 		/* send prompt character to client */
 		client_write(client, "> ", 2);
 		/* block until input arrives */
-		if (select((client->socket)+1, &read_fds, NULL, NULL, NULL) == -1) return -1;
+		if (select((client->socket)+1, &read_fds, NULL, NULL, &tv) <= 0) return -1;
 		if (FD_ISSET(client->socket, &read_fds)) {
 			/* read client input */
-			ret = client_read(client);
-			if (ret == -1) return -1;
+			if (client_read(client) == -1) return -1;
 			/* we don't want empty data so stop on \r or \n */
 			if ( (client->data[0] == '\r') || (client->data[0] == '\n') ) {
-				fprintf(stderr, "client data is empty\n");
 				client->data[0] = '\0';
 			}
 		}
 	}
 	
-	fprintf(stderr, "client data: %s\n", client->data);
 	return 0;
 }
 

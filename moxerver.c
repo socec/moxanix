@@ -11,7 +11,7 @@
 
 #define NAME "moxerver"
 
-#define SERVER_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
+#define SERVER_WAIT_TIMEOUT 2 /* seconds for select() timeout in server loop */
 
 /* Prints help message. */
 static void usage() {
@@ -82,15 +82,14 @@ int main(int argc, char *argv[]) {
 	int fdmax;
 	struct timeval tv;
 
-	pthread_t tty_thread; 
+	pthread_t tty_thread, new_client_thread;
 
 	/* zero init tty_dev */
 	if (cfsetispeed(&(tty_dev.ttyset), B0) < 0 || 
 		cfsetospeed(&(tty_dev.ttyset), B0) < 0) {
 		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
 		return -1;
-   	}
-
+	}
 	
 	/* enable catching and handling some quit signals, SIGKILL can't be caught */
 	signal(SIGTERM, quit_handler);
@@ -141,6 +140,7 @@ int main(int argc, char *argv[]) {
 	/* initialize */
 	if (server_setup(&server, tcp_port) < 0) return -1;
 	client.socket = -1;
+	new_client.socket = -1;
 	tty_dev.fd = -1;
 	
 	/* parse config file if any */
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	else if (!def_conf && ret) {
-		fprintf(stderr, "[%s] error parsing congig file %s on line %d\n", NAME, CONFILE, ret);
+		fprintf(stderr, "[%s] error parsing config file %s on line %d\n", NAME, CONFILE, ret);
 		return -1;
 	}
 	
@@ -177,8 +177,24 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	
-	/* loop with timeouts waiting for client connection and data */
+	/* loop with timeouts waiting for client connection requests and data */
 	while (1) {
+		
+		/* check if new client is availabe for connection */
+		if ( (client.socket == -1) && (new_client.socket != -1) ) {
+			/* copy new client information */
+			memcpy(&client, &new_client, sizeof(struct client_t));
+			new_client.socket = -1;
+			fprintf(stderr, "[%s] client %s connected\n", NAME, client.ip_string);
+			/* ask client to provide a username before going to "character" mode */
+			if (client_ask_username(&client) != 0) {
+				/* close client if not able to provide a username */
+				client_close(&client);
+				continue;
+			}
+			/* put client in "character" mode */
+			telnet_set_character_mode(&client);
+		}
 		
 		/* setup parameters for select() */
 		tv.tv_sec = SERVER_WAIT_TIMEOUT;
@@ -188,7 +204,7 @@ int main(int argc, char *argv[]) {
 		if (client.socket != -1) {
 			FD_SET(client.socket, &read_fds); /* wait for client if connected */
 		}
-		fdmax = (server.socket > client.socket) ? server.socket : client.socket;		
+		fdmax = (server.socket > client.socket) ? server.socket : client.socket;
 		
 		/* wait with select() */
 		ret = select(fdmax+1, &read_fds, NULL, NULL, &tv);
@@ -201,36 +217,11 @@ int main(int argc, char *argv[]) {
 			/* check server status */
 			if (FD_ISSET(server.socket, &read_fds)) {
 				fprintf(stderr, "[%s] received client connection request\n", NAME);
-				/* accept connection request if no client is connected */
-				if (client.socket == -1) {
-					ret = server_accept(&server, &client);
-					if ( ret != 0) {
-						/* print error but continue waiting for connection request */
-						//TODO maybe we should break here to avoid endless loop, what are possible causes of this failure?
-						fprintf(stderr, "[%s] problem accepting client\n", NAME);
-						continue;
-					}
-					/* ask client to provide a username before going to "character" mode */
-					client_ask_username(&client);
-					/* put client in "character" mode */
-					telnet_set_character_mode(&client);
-				}
-				/* if a client is already connected then new clients need to be handled */
-				else {
-					/* decide if current client needs to be dropped or new client needs to be rejected */
-					ret = server_drop(&server, &client);
-					if (ret < 0) {
-						/* error in handling new clients, print but continue waiting for new clients */
-						fprintf(stderr, "[%s] problem handling new client request\n", NAME);
-						continue;
-					}
-					/* if current client was dropped we need to set up new client */
-					if (ret > 0) {
-						/* ask client to provide a username before going to "character" mode */
-						client_ask_username(&client);
-						/* put client in "character" mode */
-						telnet_set_character_mode(&client);
-					}
+				/* handle new client connection request in a separate thread */
+				if (pthread_create(&new_client_thread, NULL, server_new_client_thread, NULL) != 0) {
+					/* print error but continue waiting for connection request */
+					fprintf(stderr, "[%s] problem with handling client connection request\n", NAME);
+					continue;
 				}
 			}
 			/* check client status if connected */

@@ -47,8 +47,8 @@ int server_setup(struct server_t *server, unsigned int port) {
 	server->port = port;
 	fprintf(stderr,"[%s] assigned port %u\n", __func__, server->port); //ntohs(server->address.sin_port)
 	
-	/* listen for a client connection, allow 2 connections in queue */
-	if (listen(server->socket, 2) == -1) {
+	/* listen for a client connection, allow some connections in queue */
+	if (listen(server->socket, 1) == -1) {
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
 		return -errno;
 	}
@@ -98,58 +98,69 @@ int server_accept(struct server_t *server, struct client_t *accepted_client) {
 	
 	/* print client information */
 	time2string(accepted_client->last_active, timestamp);
-	fprintf(stderr, "[%s] accepted client %s on port %u @ %s\n", __func__,
-			accepted_client->ip_string, server->port, timestamp);
+	fprintf(stderr, "[%s] accepted client %s @ %s\n",
+			__func__, accepted_client->ip_string, timestamp);
 	return 0;
 }
 
-/* Drops current client or rejects new client. */
-int server_drop(struct server_t *server, struct client_t *current_client) {
+/* Thread function handling new client connections. Handles global client variables. */
+void* server_new_client_thread(void *args) {
 	
-	struct client_t new_client;
 	char msg[DATABUF_LEN];
 	char timestamp[TIMESTAMP_LEN];
+	struct client_t temp_client;
 	
 	/* accept new connection request */
-	if (server_accept(server, &new_client) != 0) return -1;
+	if (server_accept(&server, &temp_client) != 0) return (void *) -1;
+	
+	/* if no client is connected then make new client available for connection */
+	if (client.socket == -1) {
+		memcpy(&new_client, &temp_client, sizeof(struct client_t));
+		return (void *) 0;
+	}
+	
+	/* if there is already a new client being handled then reject this client request */
+	if (new_client.socket != -1) {
+		sprintf(msg, "\nToo many connection requests, please try later.\n");
+		send(temp_client.socket, msg, strlen(msg), 0);
+		client_close(&temp_client);
+		time2string(time(NULL), timestamp);
+		fprintf(stderr, "[%s] rejected new client request %s @ %s\n",
+				__func__, temp_client.ip_string, timestamp);
+		return (void *) 0;
+	}
+	
+	/* make new client available for connection */
+	memcpy(&new_client, &temp_client, sizeof(struct client_t));
 	
 	/* inform new client that port is already in use */
-	time2string(current_client->last_active, timestamp);
+	time2string(client.last_active, timestamp);
 	sprintf(msg, "\nPort %u is already being used!\nCurrent user and last activity:\n%s @ %s\n",
-			server->port, current_client->username, timestamp);
+			server.port, client.username, timestamp);
 	send(new_client.socket, msg, strlen(msg), 0);
 	
 	/* ask new client if current client should be dropped */
-	sprintf(msg, "\nDo you want to drop the current user?\nIf yes then please type YES DROP (in uppercase):");
+	sprintf(msg, "\nDo you want to drop the current user?\nIf yes then please type YES DROP (in uppercase):\n");
 	send(new_client.socket, msg, strlen(msg), 0);
 	
 	/* wait for client input */
-	if (client_wait_line(&new_client) != 0) return -1;
+	client_wait_line(&new_client);
 	
 	/* check client confirmation */
 	if (strncmp(new_client.data, "YES DROP", 8) == 0) {
-		/* current client should be dropped, drop it */
-		client_close(current_client);
-		time2string(time(NULL), timestamp);
-		fprintf(stderr, "[%s] dropped current client %s on port %u @ %s\n", __func__,
-				current_client->ip_string, server->port, timestamp);
-		/* make new client the current client */
-		memcpy(current_client, &new_client, sizeof(struct client_t));
-		time2string(time(NULL), timestamp);
-		fprintf(stderr, "[%s] accepted new client request %s on port %u @ %s\n", __func__,
-				current_client->ip_string, server->port, timestamp);
-		/* return 1 because current client was dropped */
-		return 1;
+		/* drop connected client */
+		client_close(&client);
+		fprintf(stderr, "[%s] dropped client %s @ %s\n",
+			   __func__, client.ip_string, timestamp);
 	}
 	else {
-		/* new connection should be rejected, close connection */
-		close(new_client.socket);
+		/* reject this client request */
+		client_close(&new_client);
 		time2string(time(NULL), timestamp);
-		fprintf(stderr, "[%s] rejected new client request %s on port %u @ %s\n", __func__,
-				new_client.ip_string, server->port, timestamp);
-		/* return 0 because new client was rejected */
-		return 0;
+		fprintf(stderr, "[%s] rejected new client request %s @ %s\n",
+				__func__, temp_client.ip_string, timestamp);
+		return (void *) 1;
 	}
 	
-	
+	return (void *) 0;
 }

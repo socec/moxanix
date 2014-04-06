@@ -21,34 +21,35 @@
 
 /* Structures used for communication parameters. */
 struct server_t {
-	int socket; 					/* server socket */
-	struct sockaddr_in address; 	/* server address information */
+	int socket;						/* server socket */
+	struct sockaddr_in address;		/* server address information */
 	unsigned int port;				/* server port in host byte order, practical reference */
 };
 
 struct client_t {
-	int socket; 						/* client socket */
-	struct sockaddr_in address; 		/* client address information */
-	char ip_string[INET_ADDRSTRLEN]; 	/* client IP address as a string */
-	time_t last_active; 				/* time of client's last activity in seconds from Epoch */
-	char username[USERNAME_LEN]; 		/* username for human identification */
-	char data[DATABUF_LEN]; 			/* buffer for data received from client */
+	int socket;							/* client socket */
+	struct sockaddr_in address;			/* client address information */
+	char ip_string[INET_ADDRSTRLEN];	/* client IP address as a string */
+	time_t last_active;					/* time of client's last activity in seconds from Epoch */
+	char username[USERNAME_LEN];		/* username for human identification */
+	char data[DATABUF_LEN];				/* buffer for data received from client */
 };
 
 struct tty_t {
-	int fd; 					/* tty file descriptor */
+	int fd;						/* tty file descriptor */
 	struct termios ttysetdef;	/* default tty termios settings */
 	struct termios ttyset;		/* tty termios settings */
-	char path[DEV_PATH]; 		/* tty device path */
-	char data[DATABUF_LEN]; 	/* buffer for data received from tty */
+	char path[DEV_PATH];		/* tty device path */
+	char data[DATABUF_LEN];		/* buffer for data received from tty */
 };
 
 
 /* Global variables used throughout the application. */
-int debug_messages; 		/* if > 0 debug messages will be printed */
-struct server_t server; 	/* main server structure */
-struct client_t client; 	/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
-struct tty_t tty_dev;		/* connected tty device */
+int debug_messages;				/* if > 0 debug messages will be printed */
+struct server_t server;			/* main server structure */
+struct client_t client;			/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
+struct client_t new_client;		/* client structure for new client request */
+struct tty_t tty_dev;			/* connected tty device */
 
 
 /* Global functions used throughout the application. */
@@ -91,15 +92,17 @@ int server_close(struct server_t *server);
 int server_accept(struct server_t *server, struct client_t *accepted_client);
 
 /**
- * Asks new incoming client connection if current client needs to be dropped.
- * If current client doesn't need to be dropped then new client is rejected.
+ * Thread function handling new client connections.
+ * If there is no connected client then first client request is accepted.
+ * If there is a connected client then new client is asked if connected client should be dropped.
  * 
  * Returns:
- * - positive value if current client was dropped 
- * - 0 if new client was rejected
- * - negative value if error occurred
+ * Return value from this thread function is not used.
+ * Function handles global client variables:
+ * - client structure is reset if new client is available to connect to
+ * - new_client structure stores information about the client to connect to
  */
-int server_drop(struct server_t *server, struct client_t *client);
+void* server_new_client_thread(void *args);
 
 
 /* Functions handling communication with clients. */
