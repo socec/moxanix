@@ -66,8 +66,8 @@ int tty_close(struct tty_t *tty_dev) {
 
 	fprintf(stderr, "[%s] closing tty device \n", __func__);
 	
-	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttysetdef)) < 0) {
-		fprintf(stderr, "[%s] error restorting tty device default config\n", __func__);
+	if (tcsetattr(fd, TCSANOW, &(tty_dev->ttysetdef)) < 0) {
+		fprintf(stderr, "[%s] error restoring tty device default config\n", __func__);
 		return -errno;
    	}
 
