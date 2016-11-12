@@ -6,3 +6,9 @@ moxerver
 
 # logs directory during development
 logs
+
+# IDE and editor artifacts
+*.swp
+.project
+.cproject
+.settings
