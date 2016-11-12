@@ -13,9 +13,9 @@
 #include <time.h>
 
 #define DATABUF_LEN 128
-#define DEV_PATH 32
-#define TIMESTAMP_FORMAT "%d.%m.%Y. %H:%M:%S"
-#define TIMESTAMP_LEN 20+1 /* calculated following timestamp format */
+#define DEV_PATH 128
+#define TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S" /* ISO 8601 */
+#define TIMESTAMP_LEN 20+1 /* calculated following the timestamp format */
 #define CONFILE "moxanix.cfg"
 #define USERNAME_LEN 32
 
