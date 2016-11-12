@@ -20,36 +20,39 @@
 #define USERNAME_LEN 32
 
 /* Structures used for communication parameters. */
-struct server_t {
+typedef struct
+{
 	int socket;						/* server socket */
 	struct sockaddr_in address;		/* server address information */
 	unsigned int port;				/* server port in host byte order, practical reference */
-};
+} server_t;
 
-struct client_t {
+typedef struct
+{
 	int socket;							/* client socket */
 	struct sockaddr_in address;			/* client address information */
 	char ip_string[INET_ADDRSTRLEN];	/* client IP address as a string */
 	time_t last_active;					/* time of client's last activity in seconds from Epoch */
 	char username[USERNAME_LEN];		/* username for human identification */
 	char data[DATABUF_LEN];				/* buffer for data received from client */
-};
+} client_t;
 
-struct tty_t {
+typedef struct
+{
 	int fd;						/* tty file descriptor */
 	struct termios ttysetdef;	/* default tty termios settings */
 	struct termios ttyset;		/* tty termios settings */
 	char path[DEV_PATH];		/* tty device path */
 	char data[DATABUF_LEN];		/* buffer for data received from tty */
-};
+} tty_t;
 
 
 /* Global variables used throughout the application. */
-int debug_messages;				/* if > 0 debug messages will be printed */
-struct server_t server;			/* main server structure */
-struct client_t client;			/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
-struct client_t new_client;		/* client structure for new client request */
-struct tty_t tty_dev;			/* connected tty device */
+int debug_messages;		/* if > 0 debug messages will be printed */
+server_t server;		/* main server structure */
+client_t client;		/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
+client_t new_client;	/* client structure for new client request */
+tty_t tty_dev;			/* connected tty device */
 
 
 /* Global functions used throughout the application. */
@@ -72,7 +75,7 @@ int time2string(time_t time, char* timestamp);
  * - 0 on success,
  * - negative errno value set appropriately by error in setup process
  */
-int server_setup(struct server_t *server, unsigned int port);
+int server_setup(server_t *server, unsigned int port);
 
 /**
  * Closes the server socket.
@@ -80,7 +83,7 @@ int server_setup(struct server_t *server, unsigned int port);
  * Returns:
  * 0 always, but internally tries closing again if it fails
  */
-int server_close(struct server_t *server);
+int server_close(server_t *server);
 
 /**
  * Accepts incoming client connection.
@@ -89,7 +92,7 @@ int server_close(struct server_t *server);
  * - 0 on success,
  * - negative errno value set appropriately by error in setup process
  */
-int server_accept(struct server_t *server, struct client_t *accepted_client);
+int server_accept(server_t *server, client_t *accepted_client);
 
 /**
  * Thread function handling new client connections.
@@ -113,7 +116,7 @@ void* server_new_client_thread(void *args);
  * Returns:
  * 0 always, but internally tries closing again if it fails
  */
-int client_close(struct client_t *client);
+int client_close(client_t *client);
 
 /**
  * Reads data from client into client data buffer.
@@ -124,7 +127,7 @@ int client_close(struct client_t *client);
  * - negative ENODATA value (-ENODATA) if client disconnected,
  * - negative errno value set appropriately by error in reading
  */
-int client_read(struct client_t *client);
+int client_read(client_t *client);
 
 /**
  * Sends data from a buffer to client.
@@ -133,7 +136,7 @@ int client_read(struct client_t *client);
  * - number of sent bytes on success,
  * - negative errno value set appropriately by error in sending
  */
-int client_write(struct client_t *client, char *databuf, int datalen);
+int client_write(client_t *client, char *databuf, int datalen);
 
 /**
  * Waits for client input in "line mode", where client sends a whole line of characters.
@@ -143,7 +146,7 @@ int client_write(struct client_t *client, char *databuf, int datalen);
  * - 0 on success
  * - negative value if error occurred
  */
-int client_wait_line(struct client_t *client);
+int client_wait_line(client_t *client);
 
 /**
  * Waits for client to provide a username.
@@ -153,7 +156,7 @@ int client_wait_line(struct client_t *client);
  * - 0 on success
  * - negative value if error occurred
  */
-int client_ask_username(struct client_t *client);
+int client_ask_username(client_t *client);
 
 
 /* Functions handling details related to telnet protocol. */
@@ -165,7 +168,7 @@ int client_ask_username(struct client_t *client);
  * - 0 on success
  * - negative value if error occurred
  */
-int telnet_set_character_mode(struct client_t *client);
+int telnet_set_character_mode(client_t *client);
 
 /**
  * Handles special characters in data buffer after receiving them from client.
@@ -189,19 +192,19 @@ int telnet_handle_client_write(char *databuf, int *datalen);
 /* Functions handling communication with tty device. */
 
 /* Opens the tty device and configures it. */
-int tty_open(struct tty_t *tty_dev);
+int tty_open(tty_t *tty_dev);
 
 /* Closes the tty device. */
-int tty_close(struct tty_t *tty_dev);
+int tty_close(tty_t *tty_dev);
 
 /* Reconfigures the tty device. */
-int tty_reconfigure(struct tty_t *tty_dev, struct termios newttyset);
+int tty_reconfigure(tty_t *tty_dev, struct termios newttyset);
 
 /* Reads incoming data from tty device to tty data buffer. */
-int tty_read(struct tty_t *tty_dev);
+int tty_read(tty_t *tty_dev);
 
 /* Sends data from a buffer to tty device. */
-int tty_write(struct tty_t *tty_dev, char *databuf, int datalen);
+int tty_write(tty_t *tty_dev, char *databuf, int datalen);
 
 /* Main tty thread function */
 void *tty_thread_func(void *arg);

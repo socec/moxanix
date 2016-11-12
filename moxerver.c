@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
 		/* check if new client is availabe for connection */
 		if ( (client.socket == -1) && (new_client.socket != -1) ) {
 			/* copy new client information */
-			memcpy(&client, &new_client, sizeof(struct client_t));
+			memcpy(&client, &new_client, sizeof(client_t));
 			new_client.socket = -1;
 			fprintf(stderr, "[%s] client %s connected\n", NAME, client.ip_string);
 			/* ask client to provide a username before going to "character" mode */

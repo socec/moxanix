@@ -5,7 +5,7 @@
 #include "moxerver.h"
 
 /* Closes client connection. */
-int client_close(struct client_t *client) {
+int client_close(client_t *client) {
 	char timestamp[TIMESTAMP_LEN];
 	/* force closing in case of error */
 	if (close(client->socket) == -1) {
@@ -18,7 +18,7 @@ int client_close(struct client_t *client) {
 }
 
 /* Reads data from client into client data buffer. Returns number of read bytes. */
-int client_read(struct client_t *client) {
+int client_read(client_t *client) {
 	
 	int len;
 	
@@ -55,7 +55,7 @@ int client_read(struct client_t *client) {
 }
 
 /* Sends data from a buffer to client. Returns number of sent bytes. */
-int client_write(struct client_t *client, char *databuf, int datalen) {
+int client_write(client_t *client, char *databuf, int datalen) {
 	
 	int len;
 	
@@ -84,7 +84,7 @@ int client_write(struct client_t *client, char *databuf, int datalen) {
 }
 
 /* Waits for client input in "line mode". Blocks until input arrives. */
-int client_wait_line(struct client_t *client) {
+int client_wait_line(client_t *client) {
 	
 	fd_set read_fds;
 	struct timeval tv;
@@ -115,7 +115,7 @@ int client_wait_line(struct client_t *client) {
 }
 
 /* Waits for client to provide a username. Blocks until a username is entered. */
-int client_ask_username(struct client_t *client) {
+int client_ask_username(client_t *client) {
 	
 	int i;
 	char msg[DATABUF_LEN];

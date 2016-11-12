@@ -10,7 +10,7 @@
 #define TTY_DEF_BAUD_RATE B115200
 
 /* Opens the tty device and configures it. */
-int tty_open(struct tty_t *tty_dev) {
+int tty_open(tty_t *tty_dev) {
 	int fd;
 	// PROPOSAL:
 	// open tty device to get file descriptor @tty_dev.fd
@@ -59,7 +59,7 @@ int tty_open(struct tty_t *tty_dev) {
 }
 
 /* Closes the tty device. */
-int tty_close(struct tty_t *tty_dev) {
+int tty_close(tty_t *tty_dev) {
 	
 	int fd = tty_dev->fd;
 	tty_dev->fd = -1;
@@ -78,7 +78,7 @@ int tty_close(struct tty_t *tty_dev) {
 }
 
 /* Reconfigures the tty device. */
-int tty_reconfigure(struct tty_t *tty_dev, struct termios newttyset) {
+int tty_reconfigure(tty_t *tty_dev, struct termios newttyset) {
 	// not sure how to organize this:
 	// 1. parameters in external termios struct, copied @tty_dev.ttyset, applied with tcsetattr()
 	// 2. parameters directly @tty_dev.ttyset, applied with tcsetattr()
@@ -86,13 +86,13 @@ int tty_reconfigure(struct tty_t *tty_dev, struct termios newttyset) {
 }
 
 /* Reads incoming data from tty device to tty data buffer. */
-int tty_read(struct tty_t *tty_dev) {
+int tty_read(tty_t *tty_dev) {
 	// read and save @tty_dev.data
 	return 0;
 }
 
 /* Sends data from a buffer to tty device. */
-int tty_write(struct tty_t *tty_dev, char *databuf, int datalen) {
+int tty_write(tty_t *tty_dev, char *databuf, int datalen) {
 	write(tty_dev->fd, databuf, datalen);
 	// databuf should point to client data buffer
 	return 0;
@@ -101,7 +101,7 @@ int tty_write(struct tty_t *tty_dev, char *databuf, int datalen) {
 /* Main thread for reading and writing to tty device */
 void *tty_thread_func(void *arg) {
 	//char c;
-	struct tty_t *tty_dev = (struct tty_t*)arg;	
+	tty_t *tty_dev = (tty_t*)arg;
 	struct timeval tv;
 	ssize_t br = 0;
 	int ret;

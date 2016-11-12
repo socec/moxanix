@@ -5,7 +5,7 @@
 #include "moxerver.h"
 
 /* Sets up the server on specific port, binds to a socket and listens for client connections. */
-int server_setup(struct server_t *server, unsigned int port) {
+int server_setup(server_t *server, unsigned int port) {
 	
 	int opt;
 	char timestamp[TIMESTAMP_LEN];
@@ -59,7 +59,7 @@ int server_setup(struct server_t *server, unsigned int port) {
 }
 
 /* Closes the server socket. */
-int server_close(struct server_t *server) {
+int server_close(server_t *server) {
 	char timestamp[TIMESTAMP_LEN];
 	/* force closing in case of error */
 	if (close(server->socket) == -1) {
@@ -71,7 +71,7 @@ int server_close(struct server_t *server) {
 }
 
 /* Accepts incoming client connection. */
-int server_accept(struct server_t *server, struct client_t *accepted_client) {
+int server_accept(server_t *server, client_t *accepted_client) {
 	
 	int namelen;
 	char timestamp[TIMESTAMP_LEN];
@@ -108,14 +108,14 @@ void* server_new_client_thread(void *args) {
 	
 	char msg[DATABUF_LEN];
 	char timestamp[TIMESTAMP_LEN];
-	struct client_t temp_client;
+	client_t temp_client;
 	
 	/* accept new connection request */
 	if (server_accept(&server, &temp_client) != 0) return (void *) -1;
 	
 	/* if no client is connected then make new client available for connection */
 	if (client.socket == -1) {
-		memcpy(&new_client, &temp_client, sizeof(struct client_t));
+		memcpy(&new_client, &temp_client, sizeof(client_t));
 		return (void *) 0;
 	}
 	
@@ -131,7 +131,7 @@ void* server_new_client_thread(void *args) {
 	}
 	
 	/* make new client available for connection */
-	memcpy(&new_client, &temp_client, sizeof(struct client_t));
+	memcpy(&new_client, &temp_client, sizeof(client_t));
 	
 	/* inform new client that port is already in use */
 	time2string(client.last_active, timestamp);

@@ -5,13 +5,14 @@
 #include "moxerver.h"
 
 /* structure for holding telnet option name and value */
-struct telnet_option_t {
+typedef struct
+{
 	const char *name;
 	char value;
-};
+} telnet_option_t;
 
 /* supported telnet option values */
-struct telnet_option_t telnet_options[] = {
+telnet_option_t telnet_options[] = {
 	{"WILL", 251},
 	{"WONT", 252},
 	{"DO", 253},
@@ -45,7 +46,7 @@ static char telnet_option_value(const char* name) {
 }
 
 /* Sends telnet option command. Returns 0 on success, -1 on failure. */
-static int telnet_send_command(struct client_t *client, const char* option, const char* command) {
+static int telnet_send_command(client_t *client, const char* option, const char* command) {
 	
 	char data[3];
 	
@@ -77,7 +78,7 @@ static int telnet_handle_command(char *databuf, int datalen) {
 }
 
 /* Tells client to go into "character" mode. */
-int telnet_set_character_mode(struct client_t *client) {
+int telnet_set_character_mode(client_t *client) {
 	
 	int err = 0;
 	
