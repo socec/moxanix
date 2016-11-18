@@ -110,55 +110,7 @@ int server_accept(server_t *server, client_t *accepted_client);
 void* server_new_client_thread(void *args);
 
 
-/* Functions handling communication with clients. */
 
-/**
- * Closes client connection.
- * 
- * Returns:
- * 0 always, but internally tries closing again if it fails
- */
-int client_close(client_t *client);
-
-/**
- * Reads data from client into client data buffer.
- * Also updates client's last activity timestamp.
- * 
- * Returns:
- * - number of read bytes on success,
- * - negative ENODATA value (-ENODATA) if client disconnected,
- * - negative errno value set appropriately by error in reading
- */
-int client_read(client_t *client);
-
-/**
- * Sends data from a buffer to client.
- * 
- * Returns:
- * - number of sent bytes on success,
- * - negative errno value set appropriately by error in sending
- */
-int client_write(client_t *client, char *databuf, int datalen);
-
-/**
- * Waits for client input in "line mode", where client sends a whole line of characters.
- * Blocks until input arrives.
- * 
- * Returns:
- * - 0 on success
- * - negative value if error occurred
- */
-int client_wait_line(client_t *client);
-
-/**
- * Waits for client to provide a username.
- * Blocks until a username is entered.
- *
- * Returns:
- * - 0 on success
- * - negative value if error occurred
- */
-int client_ask_username(client_t *client);
 
 
 
