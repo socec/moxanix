@@ -1,6 +1,21 @@
-/* Handles communication with clients. */
+#pragma once
 
-#include <moxerver.h>
+/* Handles communication with a client. */
+
+#include <common.h>
+#include <netinet/in.h>
+
+#define USERNAME_LEN 32
+
+typedef struct
+{
+	int socket;							/* client socket */
+	struct sockaddr_in address;			/* client address information */
+	char ip_string[INET_ADDRSTRLEN];	/* client IP address as a string */
+	time_t last_active;					/* time of client's last activity in seconds from Epoch */
+	char username[USERNAME_LEN];		/* username for human identification */
+	char data[DATABUF_LEN];				/* buffer for data received from client */
+} client_t;
 
 /**
  * Closes a client connection.

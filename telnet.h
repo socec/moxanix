@@ -1,4 +1,8 @@
+#pragma once
+
 /* Handles details related to telnet protocol. */
+
+#include <common.h>
 
 #define TELNET_MSG_SIZE_CHARMODE 9
 

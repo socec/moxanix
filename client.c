@@ -1,4 +1,5 @@
 #include <client.h>
+#include <telnet.h>
 
 void client_close(client_t *client)
 {

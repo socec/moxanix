@@ -1,140 +1,63 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h> /* TCP_NODELAY */
-#include <arpa/inet.h>
-#include <termios.h>
-#include <time.h>
+#pragma once
 
+#include <common.h>
 #include <telnet.h>
+#include <client.h>
+#include <server.h>
+#include <tty.h>
 
-#define DATABUF_LEN 128
-#define DEV_PATH 128
-#define TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S" /* ISO 8601 */
-#define TIMESTAMP_LEN 20+1 /* calculated following the timestamp format */
 #define CONFILE "moxanix.cfg"
-#define USERNAME_LEN 32
 
-/* Structures used for communication parameters. */
-typedef struct
-{
-	int socket;						/* server socket */
-	struct sockaddr_in address;		/* server address information */
-	unsigned int port;				/* server port in host byte order, practical reference */
-} server_t;
-
-typedef struct
-{
-	int socket;							/* client socket */
-	struct sockaddr_in address;			/* client address information */
-	char ip_string[INET_ADDRSTRLEN];	/* client IP address as a string */
-	time_t last_active;					/* time of client's last activity in seconds from Epoch */
-	char username[USERNAME_LEN];		/* username for human identification */
-	char data[DATABUF_LEN];				/* buffer for data received from client */
-} client_t;
-
-typedef struct
-{
-	int fd;						/* tty file descriptor */
-	struct termios ttysetdef;	/* default tty termios settings */
-	struct termios ttyset;		/* tty termios settings */
-	char path[DEV_PATH];		/* tty device path */
-	char data[DATABUF_LEN];		/* buffer for data received from tty */
-} tty_t;
-
+#define SERVER_WAIT_TIMEOUT 2 /* seconds for select() timeout in server loop */
+#define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
 
 /* Global variables used throughout the application. */
-int debug_messages;		/* if > 0 debug messages will be printed */
 server_t server;		/* main server structure */
 client_t client;		/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
 client_t new_client;	/* client structure for new client request */
 tty_t tty_dev;			/* connected tty device */
 
-
-/* Global functions used throughout the application. */
-
-/**
- * Converts from time in seconds from Epoch to conveniently formatted string.
- * 
- * Returns:
- * 0 always
- */
-int time2string(time_t time, char* timestamp);
-
-
-/* Functions handling server operation. */
+typedef struct
+{
+	server_t *server;
+	client_t *client;
+	client_t *new_client;
+	tty_t *tty_dev;
+} resources_t;
 
 /**
- * Sets up the server on specific port, binds to a socket and listens for client connections.
+ * The thread function handling new client connections.
+ *
+ * If there is no connected clients then the first client request is accepted.
+ * If there is a connected client then the new client is asked if the currently
+ * connected client should be dropped.
+ *
+ * The function handles global resources through the pointer to a "resources_t"
+ * structure passed as the input argument.
  *
  * Returns:
- * - 0 on success,
- * - negative errno value set appropriately by error in setup process
+ * Return value from this thread function is not used.
  */
-int server_setup(server_t *server, unsigned int port);
+void* thread_new_client_connection(void *args);
 
 /**
- * Closes the server socket.
- * 
- * Returns:
- * 0 always, but internally tries closing again if it fails
- */
-int server_close(server_t *server);
-
-/**
- * Accepts incoming client connection.
- * 
- * Returns:
- * - 0 on success,
- * - negative errno value set appropriately by error in setup process
- */
-int server_accept(server_t *server, client_t *accepted_client);
-
-/**
- * Thread function handling new client connections.
- * If there is no connected client then first client request is accepted.
- * If there is a connected client then new client is asked if connected client should be dropped.
- * 
+ * The thread function handling data from the tty device.
+ *
+ * The function handles global resources through the pointer to a "resources_t"
+ * structure passed as the input argument.
+ *
  * Returns:
  * Return value from this thread function is not used.
- * Function handles global client variables:
- * - client structure is reset if new client is available to connect to
- * - new_client structure stores information about the client to connect to
  */
-void* server_new_client_thread(void *args);
+void* thread_tty_data(void *args);
 
-
-
-
-
-
-
-
-/* Functions handling communication with tty device. */
-
-/* Opens the tty device and configures it. */
-int tty_open(tty_t *tty_dev);
-
-/* Closes the tty device. */
-int tty_close(tty_t *tty_dev);
-
-/* Reconfigures the tty device. */
-int tty_reconfigure(tty_t *tty_dev, struct termios newttyset);
-
-/* Reads incoming data from tty device to tty data buffer. */
-int tty_read(tty_t *tty_dev);
-
-/* Sends data from a buffer to tty device. */
-int tty_write(tty_t *tty_dev, char *databuf, int datalen);
-
-/* Main tty thread function */
-void *tty_thread_func(void *arg);
-int speed_to_baud(speed_t speed);
-speed_t baud_to_speed(int baud);
-
+/**
+ * The thread function handling data from the connected client.
+ *
+ * The function handles global resources through the pointer to a "resources_t"
+ * structure passed as the input argument.
+ *
+ * Returns:
+ * Return value from this thread function is not used.
+ */
+void* thread_client_data(void *args);

@@ -1,16 +1,10 @@
-/* 
- * Handling communication with tty device.
- */
+#include <tty.h>
 
-#include "moxerver.h"
-
-#define TTY_THREAD_TIMEOUT_SEC 30
-#define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
 #define NAME "tty"
 #define TTY_DEF_BAUD_RATE B115200
 
-/* Opens the tty device and configures it. */
-int tty_open(tty_t *tty_dev) {
+int tty_open(tty_t *tty_dev)
+{
 	int fd;
 	// PROPOSAL:
 	// open tty device to get file descriptor @tty_dev.fd
@@ -18,14 +12,20 @@ int tty_open(tty_t *tty_dev) {
 	// apply settings by calling tcsetattr(fd, ttyset)
 	// on success copy path to @tty_dev.path
 	if ((fd = open (tty_dev->path, O_RDWR | O_NOCTTY | O_SYNC)) < 0)
+	{
 		return -errno;
-	else 
+	}
+	else
+	{
 		tty_dev->fd = fd;
+	}
 
 	/* store default termios setitngs */
 	if (tcgetattr(tty_dev->fd, &(tty_dev->ttysetdef)))
+	{
 		fprintf(stderr, "[%s] error reading device default config\n"
 				"\t\t-> default config will not be restored upon exit", __func__);
+	}
 
 	tty_dev->ttyset.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR |
 							 	 PARMRK | INPCK | ISTRIP | IXON);
@@ -39,112 +39,114 @@ int tty_open(tty_t *tty_dev) {
 
 	/* if speed is set to B0 (e.g. cfg file is not provided), default values are used */
 	if (cfgetispeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
-		cfsetispeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0) {
+		cfsetispeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0)
+	{
 		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
 		return -errno;
 	}
 	if (cfgetospeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
-		cfsetospeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0) {
+		cfsetospeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0)
+	{
 		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
 		return -errno;
    	}
 
-   	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttyset)) < 0) {
+   	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttyset)) < 0)
+   	{
 		fprintf(stderr, "[%s] error configuring tty device\n", __func__);
 		return -errno;
    	}
 
 	return 0;
-
 }
 
-/* Closes the tty device. */
-int tty_close(tty_t *tty_dev) {
-	
+int tty_close(tty_t *tty_dev)
+{
 	int fd = tty_dev->fd;
 	tty_dev->fd = -1;
 
 	fprintf(stderr, "[%s] closing tty device \n", __func__);
 	
-	if (tcsetattr(fd, TCSANOW, &(tty_dev->ttysetdef)) < 0) {
+	if (tcsetattr(fd, TCSANOW, &(tty_dev->ttysetdef)) < 0)
+	{
 		fprintf(stderr, "[%s] error restoring tty device default config\n", __func__);
 		return -errno;
    	}
 
 	if (close(fd) < 0)
+	{
 		return -errno;
+	}
 
 	return 0;
 }
 
-/* Reconfigures the tty device. */
-int tty_reconfigure(tty_t *tty_dev, struct termios newttyset) {
+int tty_reconfigure(tty_t *tty_dev, struct termios newttyset)
+{
 	// not sure how to organize this:
 	// 1. parameters in external termios struct, copied @tty_dev.ttyset, applied with tcsetattr()
 	// 2. parameters directly @tty_dev.ttyset, applied with tcsetattr()
 	return 0;
 }
 
-/* Reads incoming data from tty device to tty data buffer. */
-int tty_read(tty_t *tty_dev) {
-	// read and save @tty_dev.data
-	return 0;
-}
+int tty_read(tty_t *tty_dev)
+{
+	int len;
 
-/* Sends data from a buffer to tty device. */
-int tty_write(tty_t *tty_dev, char *databuf, int datalen) {
-	write(tty_dev->fd, databuf, datalen);
-	// databuf should point to client data buffer
-	return 0;
-}
-
-/* Main thread for reading and writing to tty device */
-void *tty_thread_func(void *arg) {
-	//char c;
-	tty_t *tty_dev = (tty_t*)arg;
-	struct timeval tv;
-	ssize_t br = 0;
-	int ret;
-	fd_set read_fds;
-
-	fprintf(stderr, "[%s] tty thread started with passed argument: %s\n", NAME, tty_dev->path);
-
-	while (1) {
-		/* setup parameters for select() */
-		tv.tv_sec = TTY_WAIT_TIMEOUT;
-		tv.tv_usec = 0;
-		FD_ZERO(&read_fds);
-		FD_SET(tty_dev->fd, &read_fds);
-			
-		/* wait with select() */
-		ret = select(tty_dev->fd + 1, &read_fds, NULL, NULL, &tv);
-
-		if (ret > 0 && FD_ISSET(tty_dev->fd, &read_fds)) {
-			br = read(tty_dev->fd, tty_dev->data, DATABUF_LEN);
-			client_write(&client, tty_dev->data, br);
-		}
-		else {
-		}
-		//sleep(10);
-		//if (read(tty_dev->fd, &c, 1) > 0)        
-		//	printf("%c", c); 
-	     	                                	
-		//fprintf(stderr, "[%s] tty thread reporting ...\n", NAME);
-			//i++;
+	len = read(tty_dev->fd, tty_dev->data, DATABUF_LEN);
+	if (len == -1)
+	{
+		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
+				errno, strerror(errno));
+		return -errno;
 	}
 
-	fprintf(stderr, "[%s] tty thread stoped\n", NAME);
+	//TODO let's print received bytes during development phase...
+	if (debug_messages)
+	{
+		int i;
+		for(i = 0; i < len; i++)
+		{
+			fprintf(stderr, "tty <- %u '%c'\n",
+					(unsigned char) tty_dev->data[i],
+					(unsigned char) tty_dev->data[i]);
+		}
+	}
 
-	return (void *)tty_dev;;
+	return len;
 }
 
-/*
- * Converts POSIX speed_t to a baud rate.  The values of the
- * constants for speed_t are not themselves portable.
- */
+int tty_write(tty_t *tty_dev, char *databuf, int datalen)
+{
+	int len;
+
+	len = write(tty_dev->fd, databuf, datalen);
+	if (len == -1)
+	{
+		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
+				errno, strerror(errno));
+		return -errno;
+	}
+
+	//TODO let's print received bytes during development phase...
+	if (debug_messages)
+	{
+		int i;
+		for(i = 0; i < datalen; i++)
+		{
+			fprintf(stderr, "tty -> %u '%c'\n",
+					(unsigned char) databuf[i],
+					(unsigned char) databuf[i]);
+		}
+	}
+
+	return len;
+}
+
 int speed_to_baud(speed_t speed)
 {
-	switch (speed) {
+	switch (speed)
+	{
 	case B0:
 		return 0;
 	case B50:
@@ -186,12 +188,10 @@ int speed_to_baud(speed_t speed)
 	}
 }
 
-/*
- * Converts a numeric baud rate to a POSIX speed_t.
- */
 speed_t baud_to_speed(int baud)
 {
-	switch (baud) {
+	switch (baud)
+	{
 	case 0:
 		return B0;
 	case 50:

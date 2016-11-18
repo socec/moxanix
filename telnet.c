@@ -1,5 +1,4 @@
 #include <telnet.h>
-#include <moxerver.h>
 
 /* structure for holding telnet option name and value */
 typedef struct
