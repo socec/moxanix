@@ -12,6 +12,8 @@
 #include <termios.h>
 #include <time.h>
 
+#include <telnet.h>
+
 #define DATABUF_LEN 128
 #define DEV_PATH 128
 #define TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S" /* ISO 8601 */
@@ -159,34 +161,7 @@ int client_wait_line(client_t *client);
 int client_ask_username(client_t *client);
 
 
-/* Functions handling details related to telnet protocol. */
 
-/**
- * Tells client to go into "character" mode.
- * 
- * Returns:
- * - 0 on success
- * - negative value if error occurred
- */
-int telnet_set_character_mode(client_t *client);
-
-/**
- * Handles special characters in data buffer after receiving them from client.
- * Used to filter out handshake commands of telnet protocol.
- * 
- * Returns:
- * 0 always
- */
-int telnet_handle_client_read(char *databuf, int *datalen);
-
-/**
- * Handles special characters in data buffer before sending to client.
- * Used for echoing characters correctly to telnet client.
- * 
- * Returns:
- * 0 always
- */
-int telnet_handle_client_write(char *databuf, int *datalen);
 
 
 /* Functions handling communication with tty device. */

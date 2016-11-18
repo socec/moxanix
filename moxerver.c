@@ -193,7 +193,9 @@ int main(int argc, char *argv[]) {
 				continue;
 			}
 			/* put client in "character" mode */
-			telnet_set_character_mode(&client);
+			char msg[TELNET_MSG_SIZE_CHARMODE];
+			telnet_message_set_character_mode(msg);
+			client_write(&client, msg, TELNET_MSG_SIZE_CHARMODE);
 		}
 		
 		/* setup parameters for select() */
