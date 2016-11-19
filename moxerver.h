@@ -13,7 +13,7 @@
 
 /* Global variables used throughout the application. */
 server_t server;	 /* main server */
-client_t client;	 /* connected client */ //TODO working with only 1 client, this can be expanded into a list
+client_t client;	 /* connected client */
 client_t new_client; /* reserved for a new client request */
 tty_t tty_dev;		 /* connected tty device */
 

@@ -5,6 +5,10 @@
 #include <common.h>
 #include <client.h>
 
+/* The serial-server scenario makes sense only for 1 connected client.
+ * Allow 1 extra connection to reject new clients with an explanation. */
+#define SERVER_MAX_CONNECTIONS 2
+
 typedef struct
 {
 	int socket;					/* server socket */

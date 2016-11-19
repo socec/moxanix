@@ -52,8 +52,8 @@ int server_setup(server_t *server, unsigned int port)
 	server->port = port;
 	fprintf(stderr,"[%s] assigned port %u\n", __func__, server->port); // ntohs(server->address.sin_port)
 	
-	/* listen for a client connection, allow some connections in queue */
-	if (listen(server->socket, 1) == -1)
+	/* listen for a client connection, allow (max-1) connections in queue */
+	if (listen(server->socket, (SERVER_MAX_CONNECTIONS - 1)) == -1)
 	{
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
 				errno, strerror(errno));
