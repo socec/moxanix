@@ -51,7 +51,7 @@ int client_read(client_t *client)
 	}
 	
 	/* handle special telnet characters coming from the client */
-	telnet_handle_client_read(client->data, &len);
+	telnet_filter_client_read(client->data, &len);
 	
 	/* grab current time and store it as client's last activity */
 	client->last_active = time(NULL);
@@ -64,7 +64,7 @@ int client_write(client_t *client, char *databuf, int datalen)
 	int len;
 	
 	/* handle special telnet characters to display them correctly on client */
-	//telnet_handle_client_write(databuf, &datalen);
+	//telnet_filter_client_write(databuf, &datalen);
 	
 	//TODO let's print received bytes during development phase...
 	if (debug_messages)
@@ -119,7 +119,7 @@ int client_wait_line(client_t *client)
 			{
 				return -1;
 			}
-			/* we don't want empty data so stop on \r or \n */
+			/* we don't want empty data so ignore data starting with \r or \n */
 			if ( (client->data[0] == '\r') || (client->data[0] == '\n') )
 			{
 				client->data[0] = '\0';
@@ -133,10 +133,10 @@ int client_wait_line(client_t *client)
 int client_ask_username(client_t *client)
 {
 	int i;
-	char msg[DATABUF_LEN];
+	char msg[BUFFER_LEN];
 	
 	/* show username request to the client */
-	snprintf(msg, DATABUF_LEN,
+	snprintf(msg, BUFFER_LEN,
 			 "\nPlease provide a username to identify yourself to"
 			 "other users (max %d characters):\n", USERNAME_LEN);
 	client_write(client, msg, strlen(msg));
@@ -160,7 +160,7 @@ int client_ask_username(client_t *client)
 	}
 	
 	/* show welcome message to client */
-	snprintf(msg, DATABUF_LEN,
+	snprintf(msg, BUFFER_LEN,
 			 "\nWelcome %s!\n\n", client->username);
 	client_write(client, msg, strlen(msg));
 	

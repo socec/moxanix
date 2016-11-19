@@ -1,3 +1,5 @@
+/* Common header file reused within the project */
+
 #pragma once
 
 #include <stdio.h>
@@ -8,17 +10,20 @@
 #include <time.h>
 #include <fcntl.h>
 
-#define DATABUF_LEN 128
+/* ========================================================================== */
 
-#define TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S" /* ISO 8601 */
-#define TIMESTAMP_LEN 20+1 /* calculated according to the timestamp format */
+#define BUFFER_LEN 128 /* length of a data buffer */
 
-/* Global variables used throughout the application. */
-int debug_messages;		/* if > 0 debug messages will be printed */
+/* ========================================================================== */
 
-/* Global functions used throughout the application. */
+int debug_messages;	/* if > 0 debug messages will be printed */
+
+/* ========================================================================== */
+
+#define TIMESTAMP_FORMAT "%Y-%m-%dT%H:%M:%S" /* follow ISO 8601 format */
+#define TIMESTAMP_LEN 20+1 /* size of the timestamp format above */
 
 /**
- * Converts time in seconds from Epoch to a conveniently formatted string.
+ * Converts time in "seconds from Epoch" to a conveniently formatted string.
  */
 void time2string(time_t time, char* timestamp);

@@ -4,15 +4,16 @@
  * communication with a specific TTY device.
  */
 
-#include "moxerver.h"
-#include "parser.h"
+#include <moxerver.h>
+#include <parser.h>
 #include <signal.h> /* handling quit signals */
 #include <pthread.h>
 
 #define NAME "moxerver"
 
 /* Prints help message. */
-static void usage() {
+static void usage()
+{
 	//TODO maybe some styling should be done
 	fprintf(stderr, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", NAME);
 	fprintf(stderr, "\t-t\ttty dev path (if not specified %s needs to be defined)\n", CONFILE);
@@ -21,44 +22,55 @@ static void usage() {
 }
 
 /* Performs cleanup and exit. */
-void cleanup(int exit_code) {
+void cleanup(int exit_code)
+{
+	// TODO: maybe pthread_kill() should be used for threads and cleanup there
 	fprintf(stderr, "[%s] cleanup and exit with %d\n", NAME, exit_code);
-	/* close client */
-	if (client.socket != -1) {
+	/* close the client */
+	if (client.socket != -1)
+	{
 		client_close(&client);
 	}
-	/* close tty device */
-	tty_close(&tty_dev);
-	/* close server */
+	/* close the tty device */
+	if (tty_dev.fd != -1)
+	{
+		tty_close(&tty_dev);
+	}
+	/* close the server */
 	server_close(&server);
 	/* exit */
 	exit(exit_code);
 }
 
 /* Handles received quit signals, use it for all quit signals of interest. */
-void quit_handler(int signum) {
+void quit_handler(int signum)
+{
     /* perform cleanup and exit with 0 */
 	fprintf(stderr, "[%s] received signal %d\n", NAME, signum);
 	cleanup(0);
 }
 
 /* Parse handler function, used to configure serial port */
-int parse_handler(void *user, const char *section, const char *name, const char *value) {
-	
+int parse_handler(void *user, const char *section, const char *name, const char *value)
+{
 	//printf("[%s] section = %s, name = %s, value = %s\n", __func__, section, name, value);
 	
-	if (!strcmp(name, "speed") && (unsigned int)atoi(section) == server.port) {
+	if (!strcmp(name, "speed") && (unsigned int)atoi(section) == server.port)
+	{
 		fprintf(stderr, "[%s] setting %s speed for port %s\n", __func__, value, section);
 		
 		if (cfsetispeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0 || 
-			cfsetospeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0) {
+			cfsetospeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0)
+		{
 			fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
 			return -1;
    		}
    	}
 	
 	if (!strcmp(name, "dev") && (unsigned int)atoi(section) == server.port)
+	{
 		strcpy(tty_dev.path, value);
+	}
 
 	return 1;
 }
@@ -70,7 +82,7 @@ void time2string(time_t time, char* timestamp)
 
 void* thread_new_client_connection(void *args)
 {
-	char msg[DATABUF_LEN];
+	char msg[BUFFER_LEN];
 	char timestamp[TIMESTAMP_LEN];
 	client_t temp_client;
 
@@ -211,9 +223,9 @@ void* thread_client_data(void *args)
 				continue;
 			}
 			/* put client in "character" mode */
-			char msg[TELNET_MSG_SIZE_CHARMODE];
+			char msg[TELNET_MSG_LEN_CHARMODE];
 			telnet_message_set_character_mode(msg);
-			client_write(&client, msg, TELNET_MSG_SIZE_CHARMODE);
+			client_write(&client, msg, TELNET_MSG_LEN_CHARMODE);
 		}
 
 		/* setup parameters for select() */
@@ -326,8 +338,8 @@ int main(int argc, char *argv[]) {
 				break;
 			/* get tty device path, default config used */
 			case 't':
-				if ((strnlen(optarg, DEV_PATH) == 0) || 
-					(strnlen(optarg, DEV_PATH) > (DEV_PATH - 1))) {
+				if ((strnlen(optarg, TTY_DEV_PATH_LEN) == 0) ||
+					(strnlen(optarg, TTY_DEV_PATH_LEN) > (TTY_DEV_PATH_LEN - 1))) {
 					fprintf(stderr, "[%s] error: tty path was not specified\n\n", NAME);
 					usage();
 					return -1;
@@ -393,9 +405,10 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	
+	/* start thread function (in this thread) that handles client data */
 	thread_client_data(NULL);
 	
-	/* unexpected break from while() loop */
+	/* unexpected break from client data loop */
 	fprintf(stderr, "[%s] unexpected condition\n", NAME);
 	/* cleanup and exit with -1 */
 	cleanup(-1);

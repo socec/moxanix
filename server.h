@@ -1,15 +1,15 @@
-#pragma once
-
 /* Handles server operation. */
+
+#pragma once
 
 #include <common.h>
 #include <client.h>
 
 typedef struct
 {
-	int socket;						/* server socket */
-	struct sockaddr_in address;		/* server address information */
-	unsigned int port;				/* server port in host byte order, practical reference */
+	int socket;					/* server socket */
+	struct sockaddr_in address;	/* server address information */
+	unsigned int port;			/* server port in host byte order */
 } server_t;
 
 /**

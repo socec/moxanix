@@ -85,10 +85,10 @@ void telnet_message_set_character_mode(char *databuf)
 	//TODO Do we verify client response? What do we do if the response is not how we expected?
 }
 
-void telnet_handle_client_read(char *databuf, int *datalen)
+void telnet_filter_client_read(char *databuf, int *datalen)
 {
 	int i;
-	char newdata[DATABUF_LEN];
+	char newdata[BUFFER_LEN];
 	int newlen = 0;
 	
 	/* process data using a new buffer */
@@ -115,10 +115,10 @@ void telnet_handle_client_read(char *databuf, int *datalen)
 	*datalen = newlen;
 }
 
-void telnet_handle_client_write(char *databuf, int *datalen)
+void telnet_filter_client_write(char *databuf, int *datalen)
 {
 	int i;
-	char newdata[DATABUF_LEN]; // TODO: maybe use realloc, this is risky
+	char newdata[BUFFER_LEN]; // TODO: maybe use realloc, this is risky
 	int newlen = 0;
 	
 	/* process data using a new buffer */

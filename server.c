@@ -8,9 +8,9 @@ int server_setup(server_t *server, unsigned int port)
 	char timestamp[TIMESTAMP_LEN];
 	
 	/* set up server address information */
-	server->address.sin_family = AF_INET; 			/* use IPv4 address family */
-	server->address.sin_port = htons(port); 		/* set up port number, htons is for using network byte order */
-	server->address.sin_addr.s_addr = INADDR_ANY; 	/* use local address */
+	server->address.sin_family = AF_INET; 		  /* use IPv4 address family */
+	server->address.sin_port = htons(port); 	  /* set up port number (htons for network byte order) */
+	server->address.sin_addr.s_addr = INADDR_ANY; /* use local address */
 	
 	/* create stream socket using TCP */
 	server->socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -50,7 +50,7 @@ int server_setup(server_t *server, unsigned int port)
 	
 	/* save server port number */
 	server->port = port;
-	fprintf(stderr,"[%s] assigned port %u\n", __func__, server->port); //ntohs(server->address.sin_port)
+	fprintf(stderr,"[%s] assigned port %u\n", __func__, server->port); // ntohs(server->address.sin_port)
 	
 	/* listen for a client connection, allow some connections in queue */
 	if (listen(server->socket, 1) == -1)
@@ -99,7 +99,7 @@ int server_accept(server_t *server, client_t *accepted_client)
 		return -errno;
 	}
 	
-	/* get client IP address as human a readable string */
+	/* get client IP address as a human readable string */
 	inet_ntop(accepted_client->address.sin_family,
 				&accepted_client->address.sin_addr.s_addr,
 				accepted_client->ip_string, INET_ADDRSTRLEN);

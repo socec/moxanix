@@ -9,13 +9,13 @@
 #define CONFILE "moxanix.cfg"
 
 #define SERVER_WAIT_TIMEOUT 2 /* seconds for select() timeout in server loop */
-#define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in server loop */
+#define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in tty loop */
 
 /* Global variables used throughout the application. */
-server_t server;		/* main server structure */
-client_t client;		/* connected client structure */ //TODO working with only 1 client, this can be expanded into a list
-client_t new_client;	/* client structure for new client request */
-tty_t tty_dev;			/* connected tty device */
+server_t server;	 /* main server */
+client_t client;	 /* connected client */ //TODO working with only 1 client, this can be expanded into a list
+client_t new_client; /* reserved for a new client request */
+tty_t tty_dev;		 /* connected tty device */
 
 typedef struct
 {

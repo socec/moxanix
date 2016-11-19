@@ -1,32 +1,26 @@
 #include <tty.h>
 
 #define NAME "tty"
-#define TTY_DEF_BAUD_RATE B115200
+#define TTY_DEFAULT_BAUDRATE B115200
 
 int tty_open(tty_t *tty_dev)
 {
-	int fd;
-	// PROPOSAL:
-	// open tty device to get file descriptor @tty_dev.fd
-	// setup tty device parameters @tty_dev.ttyset
-	// apply settings by calling tcsetattr(fd, ttyset)
-	// on success copy path to @tty_dev.path
-	if ((fd = open (tty_dev->path, O_RDWR | O_NOCTTY | O_SYNC)) < 0)
+	/* open tty device to get the file descriptor */
+	tty_dev->fd = open (tty_dev->path, O_RDWR | O_NOCTTY | O_SYNC);
+	if (tty_dev->fd < 0)
 	{
+		tty_dev->fd = -1;
 		return -errno;
 	}
-	else
-	{
-		tty_dev->fd = fd;
-	}
 
-	/* store default termios setitngs */
-	if (tcgetattr(tty_dev->fd, &(tty_dev->ttysetdef)))
+	/* store default termios settings */
+	if (tcgetattr(tty_dev->fd, &(tty_dev->ttysetold)))
 	{
 		fprintf(stderr, "[%s] error reading device default config\n"
 				"\t\t-> default config will not be restored upon exit", __func__);
 	}
 
+	/* set tty device parameters */
 	tty_dev->ttyset.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR |
 							 	 PARMRK | INPCK | ISTRIP | IXON);
 	tty_dev->ttyset.c_oflag &= ~(OCRNL | ONLCR | ONLRET |
@@ -37,20 +31,21 @@ int tty_open(tty_t *tty_dev)
 	tty_dev->ttyset.c_cc[VMIN]  = 1;
 	tty_dev->ttyset.c_cc[VTIME] = 5;
 
-	/* if speed is set to B0 (e.g. cfg file is not provided), default values are used */
+	/* if speed is set to B0 (e.g. cfg file not provided), use default values */
 	if (cfgetispeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
-		cfsetispeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0)
+		cfsetispeed(&(tty_dev->ttyset), TTY_DEFAULT_BAUDRATE) < 0)
 	{
 		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
 		return -errno;
 	}
 	if (cfgetospeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
-		cfsetospeed(&(tty_dev->ttyset), TTY_DEF_BAUD_RATE) < 0)
+		cfsetospeed(&(tty_dev->ttyset), TTY_DEFAULT_BAUDRATE) < 0)
 	{
 		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
 		return -errno;
    	}
 
+	/* apply tty device settings */
    	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttyset)) < 0)
    	{
 		fprintf(stderr, "[%s] error configuring tty device\n", __func__);
@@ -67,7 +62,7 @@ int tty_close(tty_t *tty_dev)
 
 	fprintf(stderr, "[%s] closing tty device \n", __func__);
 	
-	if (tcsetattr(fd, TCSANOW, &(tty_dev->ttysetdef)) < 0)
+	if (tcsetattr(fd, TCSANOW, &(tty_dev->ttysetold)) < 0)
 	{
 		fprintf(stderr, "[%s] error restoring tty device default config\n", __func__);
 		return -errno;
@@ -81,19 +76,11 @@ int tty_close(tty_t *tty_dev)
 	return 0;
 }
 
-int tty_reconfigure(tty_t *tty_dev, struct termios newttyset)
-{
-	// not sure how to organize this:
-	// 1. parameters in external termios struct, copied @tty_dev.ttyset, applied with tcsetattr()
-	// 2. parameters directly @tty_dev.ttyset, applied with tcsetattr()
-	return 0;
-}
-
 int tty_read(tty_t *tty_dev)
 {
 	int len;
 
-	len = read(tty_dev->fd, tty_dev->data, DATABUF_LEN);
+	len = read(tty_dev->fd, tty_dev->data, BUFFER_LEN);
 	if (len == -1)
 	{
 		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
