@@ -1,21 +1,14 @@
+/* Thread functions for handling top level tasks. */
+
 #pragma once
 
-#include <common.h>
-#include <telnet.h>
 #include <client.h>
 #include <server.h>
 #include <tty.h>
-
-#define CONFILE "moxanix.cfg"
+#include <pthread.h>
 
 #define SERVER_WAIT_TIMEOUT 2 /* seconds for select() timeout in server loop */
 #define TTY_WAIT_TIMEOUT 5 /* seconds for select() timeout in tty loop */
-
-/* Global variables used throughout the application. */
-server_t server;	 /* main server */
-client_t client;	 /* connected client */
-client_t new_client; /* reserved for a new client request */
-tty_t tty_dev;		 /* connected tty device */
 
 typedef struct
 {
@@ -28,7 +21,7 @@ typedef struct
 /**
  * The thread function handling new client connections.
  *
- * If there is no connected clients then the first client request is accepted.
+ * If there is no connected client then the first client request is accepted.
  * If there is a connected client then the new client is asked if the currently
  * connected client should be dropped.
  *
@@ -43,6 +36,8 @@ void* thread_new_client_connection(void *args);
 /**
  * The thread function handling data from the tty device.
  *
+ * The incoming tty device data is sent directly to the connected client.
+ *
  * The function handles global resources through the pointer to a "resources_t"
  * structure passed as the input argument.
  *
@@ -53,6 +48,8 @@ void* thread_tty_data(void *args);
 
 /**
  * The thread function handling data from the connected client.
+ *
+ * The incoming client data is sent directly to the tty device.
  *
  * The function handles global resources through the pointer to a "resources_t"
  * structure passed as the input argument.

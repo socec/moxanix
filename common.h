@@ -1,4 +1,4 @@
-/* Common header file reused within the project */
+/* Common header file reused within the project. */
 
 #pragma once
 
