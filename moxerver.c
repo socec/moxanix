@@ -19,14 +19,14 @@ client_t client;	 /* connected client */
 client_t new_client; /* reserved for a new client request */
 tty_t tty_dev;		 /* connected tty device */
 
-/* Prints help message. */
+/* Prints the help message. */
 static void usage()
 {
 	//TODO maybe some styling should be done
-	fprintf(stderr, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", NAME);
-	fprintf(stderr, "\t-t\ttty dev path (if not specified %s needs to be defined)\n", CONFILE);
-	fprintf(stderr, "\t-d\tturns on debug messages\n");
-	fprintf(stderr, "\n");
+	fprintf(stdout, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", NAME);
+	fprintf(stdout, "\t-t\ttty dev path (if not specified %s needs to be defined)\n", CONFILE);
+	fprintf(stdout, "\t-d\tturns on debug messages\n");
+	fprintf(stdout, "\n");
 }
 
 /* Performs cleanup and exit. */
