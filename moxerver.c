@@ -13,11 +13,15 @@
 
 #define CONFILE "moxanix.cfg"
 
-/* Global variables used throughout the application. */
+/* ========================================================================== */
+
+/* global resources */
 server_t server;	 /* main server */
 client_t client;	 /* connected client */
 client_t new_client; /* reserved for a new client request */
 tty_t tty_dev;		 /* connected tty device */
+
+/* ========================================================================== */
 
 /* Prints the help message. */
 static void usage()
@@ -29,11 +33,13 @@ static void usage()
 	fprintf(stdout, "\n");
 }
 
-/* Performs cleanup and exit. */
-void cleanup(int exit_code)
+/* Performs resource cleanup. */
+void cleanup()
 {
-	// TODO: maybe pthread_kill() should be used for threads and cleanup there
-	fprintf(stderr, "[%s] cleanup and exit with %d\n", NAME, exit_code);
+	fprintf(stderr, "[%s] performing cleanup\n", NAME);
+
+	// TODO: maybe pthread_kill() should be used for thread cleanup?
+
 	/* close the client */
 	if (client.socket != -1)
 	{
@@ -46,8 +52,6 @@ void cleanup(int exit_code)
 	}
 	/* close the server */
 	server_close(&server);
-	/* exit */
-	exit(exit_code);
 }
 
 /* Handles received quit signals, use it for all quit signals of interest. */
@@ -55,7 +59,7 @@ void quit_handler(int signum)
 {
     /* perform cleanup and exit with 0 */
 	fprintf(stderr, "[%s] received signal %d\n", NAME, signum);
-	cleanup(0);
+	exit(0);
 }
 
 /* Parse handler function, used to configure serial port */
@@ -194,10 +198,8 @@ int main(int argc, char *argv[])
 	/* start thread function (in this thread) that handles client data */
 	thread_client_data(&r);
 	
-	/* unexpected break from client data loop */
+	/* unexpected break from client data loop, cleanup and exit with -1 */
 	fprintf(stderr, "[%s] unexpected condition\n", NAME);
-	/* cleanup and exit with -1 */
-	cleanup(-1);
-	
+	cleanup();
 	return -1;
 }
