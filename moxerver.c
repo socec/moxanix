@@ -9,8 +9,6 @@
 #include <parser.h>
 #include <signal.h> /* handling quit signals */
 
-#define NAME "moxerver"
-
 #define CONFILE "moxanix.cfg"
 
 /* ========================================================================== */
@@ -27,7 +25,7 @@ tty_t tty_dev;		 /* connected tty device */
 static void usage()
 {
 	//TODO maybe some styling should be done
-	fprintf(stdout, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", NAME);
+	fprintf(stdout, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", APPNAME);
 	fprintf(stdout, "\t-t\ttty dev path (if not specified %s needs to be defined)\n", CONFILE);
 	fprintf(stdout, "\t-d\tturns on debug messages\n");
 	fprintf(stdout, "\n");
@@ -36,7 +34,7 @@ static void usage()
 /* Performs resource cleanup. */
 void cleanup()
 {
-	fprintf(stderr, "[%s] performing cleanup\n", NAME);
+	LOG("performing cleanup");
 
 	// TODO: maybe pthread_kill() should be used for thread cleanup?
 
@@ -58,7 +56,7 @@ void cleanup()
 void quit_handler(int signum)
 {
     /* perform cleanup and exit with 0 */
-	fprintf(stderr, "[%s] received signal %d\n", NAME, signum);
+	LOG("received signal %d", signum);
 	exit(0);
 }
 
@@ -69,12 +67,12 @@ int parse_handler(void *user, const char *section, const char *name, const char 
 	
 	if (!strcmp(name, "speed") && (unsigned int)atoi(section) == server.port)
 	{
-		fprintf(stderr, "[%s] setting %s speed for port %s\n", __func__, value, section);
+		LOG("setting %s speed for port %s", value, section);
 		
 		if (cfsetispeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0 || 
 			cfsetospeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0)
 		{
-			fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+			LOG("error configuring tty device speed");
 			return -1;
    		}
    	}
@@ -104,7 +102,7 @@ int main(int argc, char *argv[])
 	/* zero init tty_dev */
 	if (cfsetispeed(&(tty_dev.ttyset), B0) < 0 || 
 		cfsetospeed(&(tty_dev.ttyset), B0) < 0) {
-		fprintf(stderr, "[%s] error configuring tty device speed\n", NAME);
+		LOG("error configuring tty device speed");
 		return -1;
 	}
 	
@@ -130,7 +128,7 @@ int main(int argc, char *argv[])
 			case 't':
 				if ((strnlen(optarg, TTY_DEV_PATH_LEN) == 0) ||
 					(strnlen(optarg, TTY_DEV_PATH_LEN) > (TTY_DEV_PATH_LEN - 1))) {
-					fprintf(stderr, "[%s] error: tty path was not specified\n\n", NAME);
+					LOG("error: tty path was not specified\n");
 					usage();
 					return -1;
 				} else {
@@ -148,7 +146,7 @@ int main(int argc, char *argv[])
 				usage();
 				return 0;
 			default:
-				fprintf(stderr, "[%s] error parsing arguments\n", NAME);
+				LOG("error parsing arguments");
 				usage();
 				return -1;
 		}
@@ -162,36 +160,35 @@ int main(int argc, char *argv[])
 	
 	/* parse config file if any */
 	if (!def_conf && ((ret = ini_parse(CONFILE, &parse_handler, NULL)) == -1)) {
-		fprintf(stderr, "[%s] error opening config file %s\n", NAME, CONFILE);
+		LOG("error opening config file %s", CONFILE);
 		usage();
 		return -1;
 	}
 	else if (!def_conf && ret) {
-		fprintf(stderr, "[%s] error parsing config file %s on line %d\n", NAME, CONFILE, ret);
+		LOG("error parsing config file %s on line %d", CONFILE, ret);
 		return -1;
 	}
 	
 	if (!strcmp(tty_dev.path, "")) {
-		fprintf(stderr, "[%s] error: no tty device path given for TCP port: %d\n"
-				"\t\t-> check config file %s\n", NAME, tcp_port, CONFILE);
+		LOG("error: no tty device path given for TCP port: %d\n"
+			"\t\t-> check config file %s", tcp_port, CONFILE);
 		return -1;
 	}
 
 	/* open tty device */
 	if (tty_open(&tty_dev) < 0) {
-		fprintf(stderr, "[%s] error: opening of tty device at %s failed\n"
-				"\t\t-> continuing in echo mode\n", NAME, tty_dev.path); 
+		LOG("error: opening of tty device at %s failed\n"
+			"\t\t-> continuing in echo mode", tty_dev.path);
 		debug_messages = 1;
 	}
 	
-	fprintf(stderr, "[%s] TCP port: %d, TTY device path: %s\n", NAME, tcp_port, tty_dev.path);
+	LOG("TCP port: %d, TTY device path: %s", tcp_port, tty_dev.path);
 	
 	/* start thread function that handles tty device */
 	resources_t r = {&server, &client, &new_client, &tty_dev};
 	ret = pthread_create(&tty_thread, NULL, thread_tty_data, &r);
 	if (ret) {
-		fprintf(stderr, "[%s] error starting serial monitor thread"
-				", pthread_create returned %d\n", NAME, ret);
+		LOG("error starting serial monitor thread, pthread_create returned %d", ret);
 		return -1;
 	}
 	
@@ -199,7 +196,7 @@ int main(int argc, char *argv[])
 	thread_client_data(&r);
 	
 	/* unexpected break from client data loop, cleanup and exit with -1 */
-	fprintf(stderr, "[%s] unexpected condition\n", NAME);
+	LOG("unexpected condition");
 	cleanup();
 	return -1;
 }

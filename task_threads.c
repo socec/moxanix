@@ -1,8 +1,6 @@
 #include <task_threads.h>
 #include <telnet.h>
 
-#define NAME "moxerver"
-
 void* thread_new_client_connection(void *args)
 {
 	client_t temp_client;
@@ -27,8 +25,7 @@ void* thread_new_client_connection(void *args)
 		client_close(&temp_client);
 
 		time2string(time(NULL), timestamp);
-		fprintf(stderr, "[%s] rejected new client request %s @ %s\n", __func__,
-				temp_client.ip_string, timestamp);
+		LOG("rejected new client request %s @ %s", temp_client.ip_string, timestamp);
 
 		return (void *) 0;
 	}
@@ -72,8 +69,7 @@ void* thread_new_client_connection(void *args)
 				 * connect this new client */
 				client_close(r->client);
 
-				fprintf(stderr, "[%s] dropped client %s @ %s\n", __func__,
-						r->client->ip_string, timestamp);
+				LOG("dropped client %s @ %s", r->client->ip_string, timestamp);
 			}
 			else
 			{
@@ -81,8 +77,7 @@ void* thread_new_client_connection(void *args)
 				client_close(r->new_client);
 
 				time2string(time(NULL), timestamp);
-				fprintf(stderr, "[%s] rejected new client request %s @ %s\n", __func__,
-						temp_client.ip_string, timestamp);
+				LOG("rejected new client request %s @ %s", temp_client.ip_string, timestamp);
 
 				return (void *) 1;
 			}
@@ -101,8 +96,7 @@ void* thread_tty_data(void *args)
 	/* get resources from args */
 	resources_t *r = (resources_t*) args;
 
-	fprintf(stderr, "[%s] tty thread started with device: %s\n",
-			NAME, r->tty_dev->path);
+	LOG("tty thread started with device: %s", r->tty_dev->path);
 
 	/* loop with timeouts waiting for data from the tty device */
 	while (1)
@@ -125,11 +119,11 @@ void* thread_tty_data(void *args)
 
 		if (debug_messages)
 		{
-			fprintf(stderr, "[%s] tty thread alive\n", NAME);
+			LOG("tty thread alive");
 		}
 	} /* end main while() loop */
 
-	fprintf(stderr, "[%s] tty thread stopped\n", NAME);
+	LOG("tty thread stopped");
 
 	return (void*) 0;
 }
@@ -154,7 +148,7 @@ void* thread_client_data(void *args)
 			/* copy new client information */
 			memcpy(r->client, r->new_client, sizeof(client_t));
 			r->new_client->socket = -1;
-			fprintf(stderr, "[%s] client %s connected\n", NAME, r->client->ip_string);
+			LOG("client %s connected", r->client->ip_string);
 			/* ask client to provide a username before going to "character" mode */
 			if (client_ask_username(r->client) != 0)
 			{
@@ -187,7 +181,7 @@ void* thread_client_data(void *args)
 		if (ret == -1)
 		{
 			//TODO do we really break here and stop server when select returns an error?
-			fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__, errno, strerror(errno));
+			LOG("[@%d] error %d: %s", __LINE__, errno, strerror(errno));
 			break;
 		}
 		/* handle incoming data on server and client sockets */
@@ -196,12 +190,12 @@ void* thread_client_data(void *args)
 			/* check for new connection requests */
 			if (FD_ISSET(r->server->socket, &read_fds))
 			{
-				fprintf(stderr, "[%s] received client connection request\n", NAME);
+				LOG("received client connection request");
 				/* handle new client connection request in a separate thread */
 				if (pthread_create(&new_client_thread, NULL, thread_new_client_connection, r) != 0)
 				{
 					/* print error but continue waiting for connection requests */
-					fprintf(stderr, "[%s] problem with handling client connection request\n", NAME);
+					LOG("problem with handling client connection request");
 					continue;
 				}
 			}
@@ -213,7 +207,7 @@ void* thread_client_data(void *args)
 				/* check if client disconnected */
 				if (ret == -ENODATA)
 				{
-					fprintf(stderr, "[%s] client %s disconnected\n", NAME, r->client->ip_string);
+					LOG("client %s disconnected", r->client->ip_string);
 					/* close client connection and continue waiting for new clients */
 					client_close(r->client);
 					continue;
@@ -222,7 +216,7 @@ void* thread_client_data(void *args)
 				if (ret < 0)
 				{
 					/* print error but continue waiting for new data */
-					fprintf(stderr, "[%s] problem reading client\n", NAME);
+					LOG("problem reading from client, but will continue");
 					continue;
 				}
 				/* otherwise, pass received client data to the tty device */
@@ -245,8 +239,8 @@ void* thread_client_data(void *args)
 				time_t current_time = time(NULL);
 				if (debug_messages)
 				{
-					fprintf(stderr, "[%s] client last active %u seconds ago\n",
-							NAME, (unsigned int) (current_time - r->client->last_active));
+					LOG("client last active %u seconds ago",
+						(unsigned int) (current_time - r->client->last_active));
 				}
 			}
 			/* do something while listening for client connections? */
@@ -254,7 +248,7 @@ void* thread_client_data(void *args)
 			{
 				if (debug_messages)
 				{
-					fprintf(stderr, "[%s] listening for client connection\n", NAME);
+					LOG("listening for client connection");
 				}
 			}
 		}

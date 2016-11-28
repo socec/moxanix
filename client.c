@@ -13,8 +13,7 @@ void client_close(client_t *client)
 	client->socket = -1;
 
 	time2string(time(NULL), timestamp);
-	fprintf(stderr,"[%s] socket closed for client %s @ %s\n", __func__,
-			client->ip_string, timestamp);
+	LOG("socket closed for client %s @ %s", client->ip_string, timestamp);
 }
 
 int client_read(client_t *client)
@@ -25,15 +24,13 @@ int client_read(client_t *client)
 	len = recv(client->socket, client->data, sizeof(client->data)-1, 0);
 	if (len == -1)
 	{
-		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
-				errno, strerror(errno));
+		LOG("[@%d] error %d: %s", __LINE__, errno, strerror(errno));
 		return -errno;
 	}
 	/* a disconnected client socket is ready for reading but read returns 0 */
 	if (len == 0)
 	{
-		fprintf(stderr, "[%s:%d] no data available from client\n",
-				__func__, __LINE__);
+		LOG("[@%d] no data available from client", __LINE__);
 		return -ENODATA;
 	}
 	
@@ -43,10 +40,10 @@ int client_read(client_t *client)
 		int i;
 		for(i = 0; i < len; i++)
 		{
-			fprintf(stderr, "client %s <- %u '%c'\n",
-					client->ip_string,
-					(unsigned char) client->data[i],
-					(unsigned char) client->data[i]);
+			LOG("client %s <- %u '%c'",
+				client->ip_string,
+				(unsigned char) client->data[i],
+				(unsigned char) client->data[i]);
 		}	
 	}
 	
@@ -72,10 +69,10 @@ int client_write(client_t *client, char *databuf, int datalen)
 		int i;
 		for(i = 0; i < datalen; i++)
 		{
-			fprintf(stderr, "client %s -> %u '%c'\n",
-					client->ip_string,
-					(unsigned char) databuf[i],
-					(unsigned char) databuf[i]);
+			LOG("client %s -> %u '%c'",
+				client->ip_string,
+				(unsigned char) databuf[i],
+				(unsigned char) databuf[i]);
 		}	
 	}
 	
@@ -83,8 +80,7 @@ int client_write(client_t *client, char *databuf, int datalen)
 	len = send(client->socket, databuf, datalen, 0);
 	if (len == -1)
 	{
-		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
-				errno, strerror(errno));
+		LOG("[@%d] error %d: %s", __LINE__,	errno, strerror(errno));
 		return -errno;
 	}
 	

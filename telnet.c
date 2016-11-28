@@ -59,9 +59,9 @@ static void telnet_handle_command(char *databuf, int datalen)
 	 * we set the client, we don't adapt to client commands */
 	if (databuf[0] == telnet_option_value("IAC"))
 	{
-		fprintf(stderr, "[%s] received %s %s\n", __func__,
-				telnet_option_name(databuf[1]),
-				telnet_option_name(databuf[2]));
+		LOG("received %s %s",
+			telnet_option_name(databuf[1]),
+			telnet_option_name(databuf[2]));
 	}
 }
 
@@ -127,14 +127,14 @@ void telnet_filter_client_write(char *databuf, int *datalen)
 		/* pressed ENTER */
 		if (databuf[i] == 13)
 		{
-			fprintf(stderr, "[%s] handling ENTER\n", __func__);
+			LOG("handling ENTER");
 			newdata[newlen++] = '\r';
 			newdata[newlen++] = '\n';
 		}
 		/* pressed BACKSPACE */
 		if (databuf[i] == 127)
 		{
-			fprintf(stderr, "[%s] handling BACKSPACE\n", __func__);
+			LOG("handling BACKSPACE");
 			newdata[newlen++] = 8;
 			newdata[newlen++] = ' ';
 			newdata[newlen++] = 8;

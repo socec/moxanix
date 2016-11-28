@@ -1,6 +1,5 @@
 #include <tty.h>
 
-#define NAME "tty"
 #define TTY_DEFAULT_BAUDRATE B115200
 
 int tty_open(tty_t *tty_dev)
@@ -16,8 +15,8 @@ int tty_open(tty_t *tty_dev)
 	/* store default termios settings */
 	if (tcgetattr(tty_dev->fd, &(tty_dev->ttysetold)))
 	{
-		fprintf(stderr, "[%s] error reading device default config\n"
-				"\t\t-> default config will not be restored upon exit", __func__);
+		LOG("[@%d] error reading device default config\n"
+			"\t\t-> default config will not be restored upon exit", __LINE__);
 	}
 
 	/* set tty device parameters */
@@ -35,20 +34,20 @@ int tty_open(tty_t *tty_dev)
 	if (cfgetispeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
 		cfsetispeed(&(tty_dev->ttyset), TTY_DEFAULT_BAUDRATE) < 0)
 	{
-		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
+		LOG("error configuring tty device speed");
 		return -errno;
 	}
 	if (cfgetospeed(&(tty_dev->ttyset)) == baud_to_speed(0) && 
 		cfsetospeed(&(tty_dev->ttyset), TTY_DEFAULT_BAUDRATE) < 0)
 	{
-		fprintf(stderr, "[%s] error configuring tty device speed\n", __func__);
+		LOG("error configuring tty device speed");
 		return -errno;
    	}
 
 	/* apply tty device settings */
    	if (tcsetattr(tty_dev->fd, TCSANOW, &(tty_dev->ttyset)) < 0)
    	{
-		fprintf(stderr, "[%s] error configuring tty device\n", __func__);
+		LOG("error configuring tty device");
 		return -errno;
    	}
 
@@ -60,11 +59,11 @@ int tty_close(tty_t *tty_dev)
 	int fd = tty_dev->fd;
 	tty_dev->fd = -1;
 
-	fprintf(stderr, "[%s] closing tty device \n", __func__);
+	LOG("closing tty device");
 	
 	if (tcsetattr(fd, TCSANOW, &(tty_dev->ttysetold)) < 0)
 	{
-		fprintf(stderr, "[%s] error restoring tty device default config\n", __func__);
+		LOG("[@%d] error restoring tty device default config", __LINE__);
 		return -errno;
    	}
 
@@ -83,8 +82,7 @@ int tty_read(tty_t *tty_dev)
 	len = read(tty_dev->fd, tty_dev->data, BUFFER_LEN);
 	if (len == -1)
 	{
-		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
-				errno, strerror(errno));
+		LOG("[@%d] error %d: %s", __LINE__, errno, strerror(errno));
 		return -errno;
 	}
 
@@ -94,9 +92,9 @@ int tty_read(tty_t *tty_dev)
 		int i;
 		for(i = 0; i < len; i++)
 		{
-			fprintf(stderr, "tty <- %u '%c'\n",
-					(unsigned char) tty_dev->data[i],
-					(unsigned char) tty_dev->data[i]);
+			LOG("tty <- %u '%c'",
+				(unsigned char) tty_dev->data[i],
+				(unsigned char) tty_dev->data[i]);
 		}
 	}
 
@@ -110,8 +108,7 @@ int tty_write(tty_t *tty_dev, char *databuf, int datalen)
 	len = write(tty_dev->fd, databuf, datalen);
 	if (len == -1)
 	{
-		fprintf(stderr, "[%s:%d] error %d: %s\n", __func__, __LINE__,
-				errno, strerror(errno));
+		LOG("[@%d] error %d: %s", __LINE__, errno, strerror(errno));
 		return -errno;
 	}
 
@@ -121,9 +118,9 @@ int tty_write(tty_t *tty_dev, char *databuf, int datalen)
 		int i;
 		for(i = 0; i < datalen; i++)
 		{
-			fprintf(stderr, "tty -> %u '%c'\n",
-					(unsigned char) databuf[i],
-					(unsigned char) databuf[i]);
+			LOG("tty -> %u '%c'",
+				(unsigned char) databuf[i],
+				(unsigned char) databuf[i]);
 		}
 	}
 
