@@ -112,7 +112,10 @@ void* thread_tty_data(void *args)
 		{
 			/* pass data from tty device to client */
 			ret = tty_read(r->tty_dev);
-			client_write(r->client, r->tty_dev->data, ret);
+			if (r->client->socket != -1)
+			{
+				client_write(r->client, r->tty_dev->data, ret);
+			}
 		}
 
 		if (debug_messages)
@@ -143,17 +146,17 @@ void* thread_client_data(void *args)
 		/* check if there is no connected client, but a new client is available */
 		if ( (r->client->socket == -1) && (r->new_client->socket != -1) )
 		{
+			/* ask the new client to provide a username before going to "character" mode */
+			if (client_ask_username(r->new_client) != 0)
+			{
+				/* close new client if not able to provide a username */
+				client_close(r->new_client);
+				continue;
+			}
 			/* copy new client information */
 			memcpy(r->client, r->new_client, sizeof(client_t));
 			r->new_client->socket = -1;
 			LOG("client %s connected", r->client->ip_string);
-			/* ask client to provide a username before going to "character" mode */
-			if (client_ask_username(r->client) != 0)
-			{
-				/* close client if not able to provide a username */
-				client_close(r->client);
-				continue;
-			}
 			/* put client in "character" mode */
 			char msg[TELNET_MSG_LEN_CHARMODE];
 			telnet_message_set_character_mode(msg);
