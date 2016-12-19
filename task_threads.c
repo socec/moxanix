@@ -44,37 +44,35 @@ void* thread_new_client_connection(void *args)
 			 * but this request could be accepted. Ask the new client if the
 			 * current client connection should be dropped. */
 
-			/* temporarily accept the new client */
-			memcpy(r->new_client, &temp_client, sizeof(client_t));
-
 			/* inform the new client that the port is already in use */
 			time2string(r->client->last_active, timestamp);
 			sprintf(msg, "\nPort %u is already being used!\n"
 					"Current user and last activity:\n%s @ %s\n",
 					r->server->port, r->client->username, timestamp);
-			send(r->new_client->socket, msg, strlen(msg), 0);
+			send(temp_client.socket, msg, strlen(msg), 0);
 
 			/* ask the new client if the current client should be dropped */
 			sprintf(msg, "\nDo you want to drop the current user?\n"
 					"If yes then please type YES DROP (in uppercase):\n");
-			send(r->new_client->socket, msg, strlen(msg), 0);
+			send(temp_client.socket, msg, strlen(msg), 0);
 
 			/* wait for new client input */
-			client_wait_line(r->new_client);
+			client_wait_line(&temp_client);
 
 			/* check new client confirmation */
-			if (strncmp(r->new_client->data, "YES DROP", 8) == 0)
+			if (strncmp(temp_client.data, "YES DROP", 8) == 0)
 			{
-				/* drop the currently connected client, it will automatically
-				 * connect this new client */
+				/* drop the currently connected client */
 				client_close(r->client);
+				/* accept the new client */
+				memcpy(r->new_client, &temp_client, sizeof(client_t));
 
 				LOG("dropped client %s @ %s", r->client->ip_string, timestamp);
 			}
 			else
 			{
 				/* reject this client request */
-				client_close(r->new_client);
+				client_close(&temp_client);
 
 				time2string(time(NULL), timestamp);
 				LOG("rejected new client request %s @ %s", temp_client.ip_string, timestamp);
