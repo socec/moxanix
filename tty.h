@@ -3,7 +3,6 @@
 #pragma once
 
 #include <common.h>
-#include <client.h>
 #include <termios.h>
 
 #define TTY_DEV_PATH_LEN 128

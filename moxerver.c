@@ -6,10 +6,7 @@
 
 #include <common.h>
 #include <task_threads.h>
-#include <parser.h>
 #include <signal.h> /* handling quit signals */
-
-#define CONFILE "moxanix.cfg"
 
 /* ========================================================================== */
 
@@ -25,8 +22,7 @@ tty_t tty_dev;		 /* connected tty device */
 static void usage()
 {
 	//TODO maybe some styling should be done
-	fprintf(stdout, "Usage: %s -p tcp_port [-t tty_path] [-d] [-h]\n", APPNAME);
-	fprintf(stdout, "\t-t\ttty dev path (if not specified %s needs to be defined)\n", CONFILE);
+	fprintf(stdout, "Usage: %s -p tcp_port -t tty_path -b baud_rate [-d] [-h]\n", APPNAME);
 	fprintf(stdout, "\t-d\tturns on debug messages\n");
 	fprintf(stdout, "\n");
 }
@@ -60,31 +56,6 @@ void quit_handler(int signum)
 	exit(0);
 }
 
-/* Parse handler function, used to configure serial port */
-int parse_handler(void *user, const char *section, const char *name, const char *value)
-{
-	//printf("[%s] section = %s, name = %s, value = %s\n", __func__, section, name, value);
-	
-	if (!strcmp(name, "speed") && (unsigned int)atoi(section) == server.port)
-	{
-		LOG("setting %s speed for port %s", value, section);
-		
-		if (cfsetispeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0 || 
-			cfsetospeed(&(tty_dev.ttyset), baud_to_speed(atoi(value))) < 0)
-		{
-			LOG("error configuring tty device speed");
-			return -1;
-   		}
-   	}
-	
-	if (!strcmp(name, "dev") && (unsigned int)atoi(section) == server.port)
-	{
-		strcpy(tty_dev.path, value);
-	}
-
-	return 1;
-}
-
 void time2string(time_t time, char* timestamp)
 {
 	strftime(timestamp, TIMESTAMP_LEN, TIMESTAMP_FORMAT, localtime(&time));
@@ -95,13 +66,13 @@ int main(int argc, char *argv[])
 {
 	int ret;
 	unsigned int tcp_port = -1;
-	int def_conf = 0; 	// is default config used or from .cfg file
 
 	pthread_t tty_thread;
 
-	/* zero init tty_dev */
-	if (cfsetispeed(&(tty_dev.ttyset), B0) < 0 || 
-		cfsetospeed(&(tty_dev.ttyset), B0) < 0) {
+	/* initialize tty_dev */
+	if (cfsetispeed(&(tty_dev.ttyset), B0) < 0 ||
+		cfsetospeed(&(tty_dev.ttyset), B0) < 0)
+	{
 		LOG("error configuring tty device speed");
 		return -1;
 	}
@@ -112,30 +83,54 @@ int main(int argc, char *argv[])
 	signal(SIGINT, quit_handler);
 	
 	/* check argument count */
-	if (argc <= 1) {
+	if (argc <= 1)
+	{
 		usage();
 		return -1;
 	}
 	/* grab arguments */
 	debug_messages = 0;
-	while ((ret = getopt(argc, argv, ":p:t:dh")) != -1) {
-		switch (ret) {
+	while ((ret = getopt(argc, argv, ":p:t:b:dh")) != -1)
+	{
+		size_t path_len;
+		speed_t baudrate;
+		switch (ret)
+		{
 			/* get server port number */
 			case 'p':
 				tcp_port = (unsigned int) atoi(optarg);
-				break;
-			/* get tty device path, default config used */
-			case 't':
-				if ((strnlen(optarg, TTY_DEV_PATH_LEN) == 0) ||
-					(strnlen(optarg, TTY_DEV_PATH_LEN) > (TTY_DEV_PATH_LEN - 1))) {
-					LOG("error: tty path was not specified\n");
+				if (tcp_port < 0)
+				{
+					LOG("error, invalid TCP port value\n");
 					usage();
 					return -1;
-				} else {
-					/* set tty device path in tty_dev struct */
+				}
+				break;
+			/* get tty device path */
+			case 't':
+				path_len = strnlen(optarg, TTY_DEV_PATH_LEN);
+				/* check correct path size */
+				if ((path_len == 0) || (path_len > (TTY_DEV_PATH_LEN - 1)))
+				{
+					LOG("error with tty path length: should be <%d\n", TTY_DEV_PATH_LEN);
+					usage();
+					return -1;
+				}
+				/* otherwise, set tty device path in tty_dev struct */
+				else
+				{
 					strcpy(tty_dev.path, optarg);
 				}
-				def_conf = 1;
+				break;
+			/* get tty device baud rate */
+			case 'b':
+				baudrate = baud_to_speed(atoi(optarg));
+				if (cfsetispeed(&(tty_dev.ttyset), baudrate) < 0 ||
+					cfsetospeed(&(tty_dev.ttyset), baudrate) < 0)
+				{
+					LOG("error configuring tty device baud rate, check configuration");
+					return -1;
+				}
 				break;
 			/* enable debug messages */
 			case 'd':
@@ -152,38 +147,25 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* initialize */
-	if (server_setup(&server, tcp_port) < 0) return -1;
+	/* start server */
 	client.socket = -1;
 	new_client.socket = -1;
-	tty_dev.fd = -1;
-	
-	/* parse config file if any */
-	if (!def_conf && ((ret = ini_parse(CONFILE, &parse_handler, NULL)) == -1)) {
-		LOG("error opening config file %s", CONFILE);
-		usage();
-		return -1;
-	}
-	else if (!def_conf && ret) {
-		LOG("error parsing config file %s on line %d", CONFILE, ret);
-		return -1;
-	}
-	
-	if (!strcmp(tty_dev.path, "")) {
-		LOG("error: no tty device path given for TCP port: %d\n"
-			"\t\t-> check config file %s", tcp_port, CONFILE);
+	if (server_setup(&server, tcp_port) < 0)
+	{
 		return -1;
 	}
 
 	/* open tty device */
-	if (tty_open(&tty_dev) < 0) {
+	tty_dev.fd = -1;
+	if (tty_open(&tty_dev) < 0)
+	{
 		LOG("error: opening of tty device at %s failed\n"
 			"\t\t-> continuing in echo mode", tty_dev.path);
 		debug_messages = 1;
 	}
 	
-	LOG("TCP port: %d, TTY device path: %s", tcp_port, tty_dev.path);
-	
+	LOG("Running with TCP port: %d, TTY device path: %s", tcp_port, tty_dev.path);
+
 	/* start thread function that handles tty device */
 	resources_t r = {&server, &client, &new_client, &tty_dev};
 	ret = pthread_create(&tty_thread, NULL, thread_tty_data, &r);
