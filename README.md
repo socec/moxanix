@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/socec/moxanix.svg?branch=master)](https://travis-ci.org/socec/moxanix)
+
 moxanix
 =======
 
