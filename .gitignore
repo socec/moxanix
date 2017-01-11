@@ -1,8 +1,6 @@
-# executables
-moxerver
-
-# object files
+# object files/output directories
 *.o
+*.dir
 
 # logs directory during development
 logs

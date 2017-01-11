@@ -1,43 +1,33 @@
-# target name
-TARGET = moxerver
+# components
+MOXERVER = moxerver
+MOXANIX = moxanix
 
-# special include directories
-INCDIRS = -I.
-# special library directories
-LIBDIRS = -L.
-# used libraries
-#LIBS = -lm
-LIBS = -lpthread
+# installation root
+INSTALL_ROOT = ./install.dir
 
-# compiler and flags
-CC = gcc
-CFLAGS = -Wall $(INCDIRS) $(LIBDIRS) $(LIBS)
+# ==============================================================================
 
-# objects are .o files created from all .c files in the directory (same name)
-OBJECTS = $(patsubst %.c,%.o,$(wildcard *.c))
-# headers are all .h files in the directory
-HEADERS = $(wildcard *.h)
+MOXERVER_BUILDDIR = build.dir
 
-# all objects are built from their .c files and all headers in the directory
-%.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
+# ==============================================================================
 
-# target is built from all object files
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) $(CFLAGS) -o $@
-
-
-# support for default, clean and all options
+# supported make options (clean, install...)
 .PHONY: default all clean
 
 # all calls all other options
 all: default
 
-# default builds target
-default: $(TARGET)
+# default builds moxerver
+default:
+	cd $(MOXERVER) && make OUTDIR=$(MOXERVER_BUILDDIR)
 
-# clean removed object files and target
+# install handles moxerver and moxanix installation
+install: default
+	mkdir -p $(INSTALL_ROOT)
+	cp $(MOXERVER)/$(MOXERVER_BUILDDIR)/$(MOXERVER) $(INSTALL_ROOT)/$(MOXERVER)
+	cp $(MOXANIX)/$(MOXANIX).* $(INSTALL_ROOT)/
+
+# clean removes build and install results
 clean:
-	-rm -f *.o
-	-rm -f $(TARGET)
-
+	cd $(MOXERVER) && make clean
+	-rm -rf $(INSTALL_ROOT)
