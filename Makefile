@@ -7,6 +7,9 @@ MOXANIX = moxanix
 # system install root directory
 INSTALL_ROOT = ./install.dir
 
+# prefix for /bin directory
+BIN_PREFIX = /usr
+
 # ==============================================================================
 
 # directories used for local component builds
@@ -30,10 +33,10 @@ default:
 install: default
 	mkdir -p $(INSTALL_ROOT)
 
-	cd $(MOXERVER) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cd $(MOXERVER) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR) BIN_PREFIX=$(BIN_PREFIX)
 	cp -r $(MOXERVER)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
 
-	cd $(MOXANIX) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cd $(MOXANIX) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR) BIN_PREFIX=$(BIN_PREFIX)
 	cp -r $(MOXANIX)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
 
 # clean removes build and install results

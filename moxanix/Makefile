@@ -8,6 +8,8 @@ TARGET_CONFIG = moxanix.cfg
 BUILDDIR = build.dir
 # installation root
 INSTALLDIR = install.dir
+# prefix for /bin directory
+BIN_PREFIX = /usr
 
 # ==============================================================================
 
@@ -20,8 +22,8 @@ default:
 # install targets
 install:
 	# install control script
-	mkdir -p $(INSTALLDIR)/bin
-	cp $(TARGET_CONTROL) $(INSTALLDIR)/bin/
+	mkdir -p $(INSTALLDIR)/$(BIN_PREFIX)/bin
+	cp $(TARGET_CONTROL) $(INSTALLDIR)/$(BIN_PREFIX)/bin/
 	# install configuration file
 	mkdir -p $(INSTALLDIR)/etc
 	cp $(TARGET_CONFIG) $(INSTALLDIR)/etc/
