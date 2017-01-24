@@ -1,8 +1,12 @@
-# target name
-TARGET = moxerver
+# target names
+TARGET_BINARY = moxerver
+
+# ==============================================================================
 
 # directory for build results
 BUILDDIR = build.dir
+# installation root
+INSTALLDIR = install.dir
 
 # ==============================================================================
 
@@ -22,7 +26,7 @@ CFLAGS = -Wall $(INCDIRS) $(LIBDIRS) $(LIBS)
 
 # ==============================================================================
 
-# build everything in a dedicated directory $(OUTDIR)
+# build everything in a dedicated directory $(BUILDDIR)
 
 # objects are .o files created from all .c files in the directory (same name)
 OBJECTS = $(patsubst %.c, $(BUILDDIR)/%.o, $(wildcard *.c))
@@ -35,20 +39,26 @@ $(BUILDDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # target is built from all object files
-$(BUILDDIR)/$(TARGET): $(OBJECTS)
+$(BUILDDIR)/$(TARGET_BINARY): $(OBJECTS)
 	$(CC) $(OBJECTS) $(CFLAGS) -o $@
 
 # ==============================================================================
 
 # supported make options (clean, install...)
-.PHONY: default all clean
+.PHONY: all default install clean
 
 # all calls all other options
-all: default
+all: default install
 
 # default builds target
-default: $(BUILDDIR)/$(TARGET)
+default: $(BUILDDIR)/$(TARGET_BINARY)
+
+# install target
+install: default
+	mkdir -p $(INSTALLDIR)/bin
+	cp $(BUILDDIR)/$(TARGET_BINARY) $(INSTALLDIR)/bin/
 
 # clean removes object files and target (ignore errors with "-" before commands)
 clean:
 	-rm -rf $(BUILDDIR)
+	-rm -rf $(INSTALLDIR)

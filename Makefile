@@ -2,32 +2,42 @@
 MOXERVER = moxerver
 MOXANIX = moxanix
 
-# installation root
+# ==============================================================================
+
+# system install root directory
 INSTALL_ROOT = ./install.dir
 
 # ==============================================================================
 
-MOXERVER_BUILDDIR = build.dir
+# directories used for local component builds
+BUILDDIR = build.dir
+INSTALLDIR = install.dir
 
 # ==============================================================================
 
 # supported make options (clean, install...)
-.PHONY: default all clean
+.PHONY: all default install clean
 
 # all calls all other options
-all: default
+all: default install
 
-# default builds moxerver
+# default builds components
 default:
-	cd $(MOXERVER) && make OUTDIR=$(MOXERVER_BUILDDIR)
+	cd $(MOXERVER) && make BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cd $(MOXANIX) && make BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
 
-# install handles moxerver and moxanix installation
+# install handles component installation
 install: default
 	mkdir -p $(INSTALL_ROOT)
-	cp $(MOXERVER)/$(MOXERVER_BUILDDIR)/$(MOXERVER) $(INSTALL_ROOT)/$(MOXERVER)
-	cp $(MOXANIX)/$(MOXANIX).* $(INSTALL_ROOT)/
+
+	cd $(MOXERVER) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cp -r $(MOXERVER)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
+
+	cd $(MOXANIX) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cp -r $(MOXANIX)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
 
 # clean removes build and install results
 clean:
-	cd $(MOXERVER) && make clean
+	cd $(MOXERVER) && make clean BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cd $(MOXANIX) && make clean BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
 	-rm -rf $(INSTALL_ROOT)
