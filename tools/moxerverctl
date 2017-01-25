@@ -63,9 +63,9 @@ do_read_config()
 			# configuration lines
 			CONF_LINES[$CONF_SIZE]=$(echo -n $line)
 			# extract configuration arguments
-			tcp=$(echo $line | awk '{print $1}' | tr -d "tcp=")
-			tty=$(echo $line | awk '{print $2}' | tr -d "tty=")
-			baud=$(echo $line | awk '{print $3}' | tr -d "baud=")
+			tcp=$(echo $line | awk '{print $1}' | sed -e 's/tcp=//')
+			tty=$(echo $line | awk '{print $2}' | sed -e 's/tty=//')
+			baud=$(echo $line | awk '{print $3}' | sed -e 's/baud=//')
 			# compose configuration argument lines for passing to the servers
 			CONF_ARGS[$CONF_SIZE]="-p $tcp -t $tty -b $baud"
 			# increment configuration size (array index)
