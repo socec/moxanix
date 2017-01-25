@@ -18,10 +18,7 @@ DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALL_ROOT) BIN_PREFIX=$(BIN_PR
 # ==============================================================================
 
 # supported make options (clean, install...)
-.PHONY: all default install clean
-
-# all calls all other options
-all: default install
+.PHONY: default install clean
 
 # default builds components
 default:

@@ -32,9 +32,9 @@ moxerver.cfg
 Build and install
 =================
 
-Run `make` to build the project.  
-This default build will produce artifacts in a directory "install.dir" with executables installed in "usr/bin" (prefix is "usr").  
+Run `make` to build the project and `make install` to install it.  
+This default build will produce artifacts in a directory "install.dir" with executables installed in "usr/bin" (default prefix is "usr").  
 
-You can install directly into some directory with `make INSTALL_ROOT=/some/dir`.  
-You can change the install prefix for executables with `make BIN_PREFIX=someprefix`.  
+You can install directly into some other directory with `make INSTALL_ROOT=/some/dir`.  
+You can change the default install prefix for executables with `make BIN_PREFIX=someprefix`.  
 These options can also be combined into `make INSTALL_ROOT=/some/dir BIN_PREFIX=someprefix`
