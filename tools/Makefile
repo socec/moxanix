@@ -5,9 +5,9 @@ TARGET_CONFIG = moxerver.cfg
 # ==============================================================================
 
 # directory for build results
-BUILDDIR = build.dir
+BUILDDIR = $(abspath build.dir)
 # installation root
-INSTALLDIR = install.dir
+INSTALLDIR = $(abspath install.dir)
 # prefix for /bin directory
 BIN_PREFIX = /usr
 
@@ -21,12 +21,11 @@ default:
 
 # install targets
 install:
-	# install control script
-	mkdir -p $(INSTALLDIR)/$(BIN_PREFIX)/bin
-	cp $(TARGET_CONTROL) $(INSTALLDIR)/$(BIN_PREFIX)/bin/
 	# install configuration file
-	mkdir -p $(INSTALLDIR)/etc
-	cp $(TARGET_CONFIG) $(INSTALLDIR)/etc/
+	install -Dm0644 $(TARGET_CONFIG) $(INSTALLDIR)/etc/$(TARGET_CONFIG)
+	# install control script, referring to the configuration file
+	install -Dm0755 $(TARGET_CONTROL) $(INSTALLDIR)/$(BIN_PREFIX)/bin/$(TARGET_CONTROL)
+	sed -i -e 's#ROOT=\"\"#ROOT=$(INSTALLDIR)#' $(INSTALLDIR)/$(BIN_PREFIX)/bin/$(TARGET_CONTROL)
 
 # clean removes object files and target (ignore errors with "-" before commands)
 clean:

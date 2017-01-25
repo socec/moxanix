@@ -2,10 +2,8 @@
 SERVER = moxerver
 TOOLS = tools
 
-# ==============================================================================
-
 # system install root directory
-INSTALL_ROOT = ./install.dir
+INSTALL_ROOT = $(abspath ./install.dir)
 
 # prefix for /bin directory
 BIN_PREFIX = /usr
@@ -14,9 +12,8 @@ BIN_PREFIX = /usr
 
 # directories used for local component builds
 BUILDDIR = build.dir
-INSTALLDIR = install.dir
 # directory configuration for local component builds
-DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR) BIN_PREFIX=$(BIN_PREFIX)
+DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALL_ROOT) BIN_PREFIX=$(BIN_PREFIX)
 
 # ==============================================================================
 
@@ -34,12 +31,8 @@ default:
 # install handles component installation
 install: default
 	mkdir -p $(INSTALL_ROOT)
-
 	cd $(SERVER) && make install $(DIR_CONFIG)
-	cp -r $(SERVER)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
-
 	cd $(TOOLS) && make install $(DIR_CONFIG)
-	cp -r $(TOOLS)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
 
 # clean removes build and install results
 clean:

@@ -4,10 +4,12 @@
 # setup
 # =====
 
+ROOT=""
+
 # parameters
-CONFIGURATION_FILE="./moxanix.cfg"
-SERVER_BINARY="./moxerver"
-LOG_DIRECTORY="./logs"
+CONFIGURATION_FILE="$ROOT/etc/moxerver.cfg"
+SERVER_BINARY="moxerver"
+LOG_DIRECTORY="$ROOT/var/logs/moxerver"
 
 
 # global variables for configuration

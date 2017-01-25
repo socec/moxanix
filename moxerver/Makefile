@@ -4,9 +4,9 @@ TARGET_BINARY = moxerver
 # ==============================================================================
 
 # directory for build results
-BUILDDIR = build.dir
+BUILDDIR = $(abspath build.dir)
 # installation root
-INSTALLDIR = install.dir
+INSTALLDIR = $(abspath install.dir)
 # prefix for /bin directory
 BIN_PREFIX = /usr
 
@@ -57,8 +57,7 @@ default: $(BUILDDIR)/$(TARGET_BINARY)
 
 # install target binary
 install: default
-	mkdir -p $(INSTALLDIR)/$(BIN_PREFIX)/bin
-	cp $(BUILDDIR)/$(TARGET_BINARY) $(INSTALLDIR)/$(BIN_PREFIX)/bin
+	install -Dm0755 $(BUILDDIR)/$(TARGET_BINARY) $(INSTALLDIR)/$(BIN_PREFIX)/bin/$(TARGET_BINARY)
 
 # clean removes object files and target (ignore errors with "-" before commands)
 clean:
