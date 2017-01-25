@@ -1,6 +1,6 @@
 # target names
-TARGET_CONTROL = moxanix.sh
-TARGET_CONFIG = moxanix.cfg
+TARGET_CONTROL = moxerverctl
+TARGET_CONFIG = moxerver.cfg
 
 # ==============================================================================
 

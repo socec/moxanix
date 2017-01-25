@@ -40,7 +40,7 @@ $(BUILDDIR)/%.o: %.c
 	mkdir -p $(BUILDDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# target is built from all object files
+# target binary is built from all object files
 $(BUILDDIR)/$(TARGET_BINARY): $(OBJECTS)
 	$(CC) $(OBJECTS) $(CFLAGS) -o $@
 
@@ -55,7 +55,7 @@ all: default install
 # default builds target
 default: $(BUILDDIR)/$(TARGET_BINARY)
 
-# install target
+# install target binary
 install: default
 	mkdir -p $(INSTALLDIR)/$(BIN_PREFIX)/bin
 	cp $(BUILDDIR)/$(TARGET_BINARY) $(INSTALLDIR)/$(BIN_PREFIX)/bin

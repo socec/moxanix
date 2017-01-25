@@ -1,6 +1,6 @@
 # components
-MOXERVER = moxerver
-MOXANIX = moxanix
+SERVER = moxerver
+TOOLS = tools
 
 # ==============================================================================
 
@@ -15,6 +15,8 @@ BIN_PREFIX = /usr
 # directories used for local component builds
 BUILDDIR = build.dir
 INSTALLDIR = install.dir
+# directory configuration for local component builds
+DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR) BIN_PREFIX=$(BIN_PREFIX)
 
 # ==============================================================================
 
@@ -26,21 +28,21 @@ all: default install
 
 # default builds components
 default:
-	cd $(MOXERVER) && make BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
-	cd $(MOXANIX) && make BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cd $(SERVER) && make $(DIR_CONFIG)
+	cd $(TOOLS) && make $(DIR_CONFIG)
 
 # install handles component installation
 install: default
 	mkdir -p $(INSTALL_ROOT)
 
-	cd $(MOXERVER) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR) BIN_PREFIX=$(BIN_PREFIX)
-	cp -r $(MOXERVER)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
+	cd $(SERVER) && make install $(DIR_CONFIG)
+	cp -r $(SERVER)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
 
-	cd $(MOXANIX) && make install BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR) BIN_PREFIX=$(BIN_PREFIX)
-	cp -r $(MOXANIX)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
+	cd $(TOOLS) && make install $(DIR_CONFIG)
+	cp -r $(TOOLS)/$(INSTALLDIR)/* $(INSTALL_ROOT)/
 
 # clean removes build and install results
 clean:
-	cd $(MOXERVER) && make clean BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
-	cd $(MOXANIX) && make clean BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALLDIR)
+	cd $(SERVER) && make clean $(DIR_CONFIG)
+	cd $(TOOLS) && make clean $(DIR_CONFIG)
 	-rm -rf $(INSTALL_ROOT)

@@ -19,19 +19,19 @@ moxerver
 - allows bidirectional communication
 - it is expected to run a separate instance for every serial device and TCP port pair
 
-moxanix.sh
-----------
+moxerverctl
+-----------
 - starts, stops or displays status for different moxervers
 - commands can handle one specific or all moxervers at once
 
-moxanix.cfg
------------
+moxerver.cfg
+------------
 - defines connections between serial devices and TCP ports
 - each line corresponds to one micro server handling the defined connection
 
 Build and install
 =================
 
-Run "make" to build the project.  
+Run `make` to build the project.  
 The build artifacts can be found in the directory "install.dir" and should be copied from there.  
-If you want to install directly to some directory run "make INSTALL_ROOT=/some/dir".
+If you want to install directly to some directory run `make INSTALL_ROOT=/some/dir`.
