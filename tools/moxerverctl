@@ -9,7 +9,7 @@ ROOT=""
 # parameters
 CONFIGURATION_FILE="$ROOT/etc/moxerver.cfg"
 SERVER_BINARY="moxerver"
-LOG_DIRECTORY="$ROOT/var/logs/moxerver"
+LOG_DIRECTORY="$ROOT/var/log/moxerver"
 
 
 # global variables for configuration
