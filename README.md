@@ -33,5 +33,8 @@ Build and install
 =================
 
 Run `make` to build the project.  
-The build artifacts can be found in the directory "install.dir" and should be copied from there.  
-If you want to install directly to some directory run `make INSTALL_ROOT=/some/dir`.
+This default build will produce artifacts in a directory "install.dir" with executables installed in "usr/bin" (prefix is "usr").  
+
+You can install directly into some directory with `make INSTALL_ROOT=/some/dir`.  
+You can change the install prefix for executables with `make BIN_PREFIX=someprefix`.  
+These options can also be combined into `make INSTALL_ROOT=/some/dir BIN_PREFIX=someprefix`
