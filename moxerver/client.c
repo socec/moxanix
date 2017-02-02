@@ -133,7 +133,7 @@ int client_ask_username(client_t *client)
 	
 	/* show username request to the client */
 	snprintf(msg, BUFFER_LEN,
-			 "\nPlease provide a username to identify yourself to"
+			 "\nPlease provide a username to identify yourself to "
 			 "other users (max %d characters):\n", USERNAME_LEN);
 	client_write(client, msg, strlen(msg));
 	
