@@ -1,6 +1,6 @@
 # components
 SERVER = moxerver
-TOOLS = tools
+CONTROL = moxerverctl
 
 # system install root directory
 INSTALL_ROOT = $(abspath ./install.dir)
@@ -23,16 +23,16 @@ DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALL_ROOT) BIN_PREFIX=$(BIN_PR
 # default builds components
 default:
 	cd $(SERVER) && make $(DIR_CONFIG)
-	cd $(TOOLS) && make $(DIR_CONFIG)
+	cd $(CONTROL) && make $(DIR_CONFIG)
 
 # install handles component installation
 install: default
 	mkdir -p $(INSTALL_ROOT)
 	cd $(SERVER) && make install $(DIR_CONFIG)
-	cd $(TOOLS) && make install $(DIR_CONFIG)
+	cd $(CONTROL) && make install $(DIR_CONFIG)
 
 # clean removes build and install results
 clean:
 	cd $(SERVER) && make clean $(DIR_CONFIG)
-	cd $(TOOLS) && make clean $(DIR_CONFIG)
+	cd $(CONTROL) && make clean $(DIR_CONFIG)
 	-rm -rf $(INSTALL_ROOT)
