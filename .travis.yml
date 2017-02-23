@@ -4,4 +4,4 @@ compiler:
 - gcc
 - clang
 
-script: make install
+script: sudo make install
