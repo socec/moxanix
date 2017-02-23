@@ -33,7 +33,8 @@ Build and install
 =================
 
 Run `make` to build the project and `make install` to install it.  
-This default build will produce artifacts in a directory "install.dir" with executables installed in "usr/bin" (default prefix is "usr") and the configuration script in /etc.  
+
+This will install executables in "/usr/bin" (default prefix is "usr") and the configuration script in /etc.  
 
 You can install directly into some other directory with `make install INSTALL_ROOT=/some/dir`.  
 You can change the default install prefix for executables with `make install BIN_PREFIX=someprefix`.  

@@ -62,4 +62,4 @@ install: default
 # clean removes object files and target (ignore errors with "-" before commands)
 clean:
 	-rm -rf $(BUILDDIR)
-	-rm -rf $(INSTALLDIR)
+	-rm -rf $(INSTALLDIR)/$(BIN_PREFIX)/bin/$(TARGET_BINARY)

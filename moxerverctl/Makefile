@@ -29,4 +29,5 @@ install:
 
 # clean removes object files and target (ignore errors with "-" before commands)
 clean:
-	-rm -rf $(INSTALLDIR)
+	-rm -rf $(INSTALLDIR)/etc/$(TARGET_CONFIG)
+	-rm -rf $(INSTALLDIR)/$(BIN_PREFIX)/bin/$(TARGET_CONTROL)

@@ -3,7 +3,7 @@ SERVER = moxerver
 CONTROL = moxerverctl
 
 # system install root directory
-INSTALL_ROOT = $(abspath ./install.dir)
+INSTALL_ROOT = $(abspath /)
 
 # prefix for /bin directory
 BIN_PREFIX = /usr
@@ -13,7 +13,7 @@ BIN_PREFIX = /usr
 # directories used for local component builds
 BUILDDIR = build.dir
 # directory configuration for local component builds
-DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(INSTALL_ROOT) BIN_PREFIX=$(BIN_PREFIX)
+DIR_CONFIG = BUILDDIR=$(BUILDDIR) INSTALLDIR=$(abspath $(INSTALL_ROOT)) BIN_PREFIX=$(BIN_PREFIX)
 
 # ==============================================================================
 
