@@ -1,0 +1,10 @@
+[Unit]
+Description=Moxanix - a serial device server
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/moxerverctl start 0
+ExecStop=/usr/bin/moxerverctl stop 0
+
+[Install]
+WantedBy=multi-user.target
